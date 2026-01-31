@@ -1,0 +1,523 @@
+import { router } from "expo-router";
+import { TrendingUp, Search, ArrowUp, ArrowDown, Minus } from "lucide-react-native";
+import React, { useState, useMemo } from "react";
+import {
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
+  TextInput,
+  TouchableOpacity,
+  Pressable,
+  useColorScheme,
+} from "react-native";
+
+import { cargoCompanies, type TransportType } from "@/mocks/cargo-data";
+import { Colors } from "@/constants/colors";
+import { EXCHANGE_RATE_USD_TO_TJS } from "@/constants/translations";
+import { useLanguage } from "@/contexts/LanguageContext";
+
+export default function HomeScreen() {
+  const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme ?? 'light'];
+  const { t } = useLanguage();
+  const [currency, setCurrency] = useState<'USD' | 'TJS'>('USD');
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [selectedFilters, setSelectedFilters] = useState<TransportType[]>([]);
+
+  const filteredCompanies = useMemo(() => {
+    let filtered = cargoCompanies;
+
+    if (searchQuery.trim()) {
+      filtered = filtered.filter((company) =>
+        company.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    if (selectedFilters.length > 0) {
+      filtered = filtered.filter((company) =>
+        company.transportTypes.some((type) => selectedFilters.includes(type))
+      );
+    }
+
+    return filtered;
+  }, [searchQuery, selectedFilters]);
+
+  const rankedCompanies = useMemo(
+    () => [...cargoCompanies].sort((a, b) => b.rating - a.rating).map((company, index) => ({ ...company, rank: index + 1 })),
+    []
+  );
+
+  const trendingCompanies = useMemo(
+    () => rankedCompanies.slice(0, 3),
+    [rankedCompanies]
+  );
+
+  const convertPrice = (usdPrice: number): string => {
+    if (currency === 'USD') {
+      return `$${usdPrice.toFixed(2)}`;
+    }
+    return `${(usdPrice * EXCHANGE_RATE_USD_TO_TJS).toFixed(0)} TJS`;
+  };
+
+  const getPriceChange = (): 'stable' | 'up' | 'down' => {
+    return 'stable';
+  };
+
+  const toggleFilter = (filter: TransportType) => {
+    setSelectedFilters((prev) =>
+      prev.includes(filter)
+        ? prev.filter((f) => f !== filter)
+        : [...prev, filter]
+    );
+  };
+
+  const getTransportTypeLabel = (type: TransportType): string => {
+    const labels: Record<TransportType, string> = {
+      air: "Air ✈️",
+      auto: "Auto 🚛",
+      rail: "Rail 🚂",
+    };
+    return labels[type];
+  };
+
+  return (
+    <View style={[styles.container, { backgroundColor: theme.secondaryBackground }]}>
+      <View style={[styles.header, { backgroundColor: theme.cardBackground, borderBottomColor: theme.border }]}>
+        <View style={[styles.searchContainer, { backgroundColor: theme.searchBackground }]}>
+          <Search color={theme.secondaryText} size={20} style={styles.searchIcon} />
+          <TextInput
+            style={[styles.searchInput, { color: theme.text }]}
+            placeholder={t.search}
+            placeholderTextColor={theme.secondaryText}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+        </View>
+
+        <View style={styles.filterContainer}>
+          {(["air", "auto", "rail"] as TransportType[]).map((filter) => (
+            <TouchableOpacity
+              key={filter}
+              style={[
+                styles.filterChip,
+                { backgroundColor: theme.searchBackground, borderColor: theme.border },
+                selectedFilters.includes(filter) && { backgroundColor: theme.primary, borderColor: theme.primary },
+              ]}
+              onPress={() => toggleFilter(filter)}
+            >
+              <Text
+                style={[
+                  styles.filterChipText,
+                  { color: theme.secondaryText },
+                  selectedFilters.includes(filter) && styles.filterChipTextActive,
+                ]}
+              >
+                {getTransportTypeLabel(filter)}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        <View style={[styles.currencyBar, { backgroundColor: theme.cardBackground, borderBottomColor: theme.border }]}>
+          <Text style={[styles.currencyLabel, { color: theme.secondaryText }]}>{t.currency}:</Text>
+          <TouchableOpacity
+            style={[
+              styles.currencyButton,
+              { borderColor: theme.border },
+              currency === 'USD' && { backgroundColor: theme.primary },
+            ]}
+            onPress={() => setCurrency('USD')}
+          >
+            <Text style={[styles.currencyText, { color: currency === 'USD' ? '#ffffff' : theme.text }]}>USD</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.currencyButton,
+              { borderColor: theme.border },
+              currency === 'TJS' && { backgroundColor: theme.primary },
+            ]}
+            onPress={() => setCurrency('TJS')}
+          >
+            <Text style={[styles.currencyText, { color: currency === 'TJS' ? '#ffffff' : theme.text }]}>TJS</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <TrendingUp color={theme.primary} size={20} />
+            <Text style={[styles.sectionTitle, { color: theme.text }]}>{t.trending}</Text>
+          </View>
+          {trendingCompanies.map((company) => (
+            <Pressable
+              key={company.id}
+              style={[styles.trendingCard, { backgroundColor: theme.cardBackground, borderColor: theme.primary }]}
+              onPress={() => router.push(`/(tabs)/(home)/cargo/${company.id}`)}
+            >
+              <View style={styles.cardHeader}>
+                <View style={[styles.logoContainer, { backgroundColor: theme.searchBackground }]}>
+                  <Text style={styles.logo}>{company.logo}</Text>
+                </View>
+                <View style={styles.cardInfo}>
+                  <View style={styles.nameRow}>
+                    <Text style={[styles.companyName, { color: theme.text }]}>{company.name}</Text>
+                    {company.isVerified && (
+                      <Text style={[styles.verifiedBadge, { backgroundColor: theme.verified }]}>✓</Text>
+                    )}
+                  </View>
+                  <View style={styles.ratingRow}>
+                    <Text style={[styles.rating, { color: theme.text }]}>⭐ {company.rating}</Text>
+                    <Text style={[styles.reviewCount, { color: theme.secondaryText }]}>({company.reviewCount} {t.reviews.toLowerCase()})</Text>
+                  </View>
+                </View>
+              </View>
+              <View style={[styles.metricsRow, { backgroundColor: theme.tableHeader }]}>
+                <View style={styles.metric}>
+                  <Text style={[styles.metricValue, { color: theme.primary }]}>{convertPrice(company.pricePerKg)}/kg</Text>
+                  <Text style={[styles.metricLabel, { color: theme.secondaryText }]}>{t.price}</Text>
+                </View>
+                <View style={[styles.metricDivider, { backgroundColor: theme.border }]} />
+                <View style={styles.metric}>
+                  <Text style={[styles.metricValue, { color: theme.primary }]}>{company.avgDeliveryDays}d</Text>
+                  <Text style={[styles.metricLabel, { color: theme.secondaryText }]}>{t.delivery}</Text>
+                </View>
+                <View style={[styles.metricDivider, { backgroundColor: theme.border }]} />
+                <View style={styles.metric}>
+                  <Text style={[styles.metricValue, { color: theme.primary }]}>{company.reliabilityScore}%</Text>
+                  <Text style={[styles.metricLabel, { color: theme.secondaryText }]}>{t.reliability}</Text>
+                </View>
+              </View>
+            </Pressable>
+          ))}
+        </View>
+
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: theme.text }]}>{t.allCompanies} ({filteredCompanies.length})</Text>
+          
+          <View style={[styles.tableHeader, { backgroundColor: theme.tableHeader, borderBottomColor: theme.tableBorder }]}>
+            <Text style={[styles.tableHeaderText, { color: theme.secondaryText, width: 40 }]}>#{t.rank}</Text>
+            <Text style={[styles.tableHeaderText, { color: theme.secondaryText, flex: 1 }]}>{t.cargo}</Text>
+            <Text style={[styles.tableHeaderText, { color: theme.secondaryText, width: 100, textAlign: 'right' }]}>{t.price}</Text>
+            <Text style={[styles.tableHeaderText, { color: theme.secondaryText, width: 60, textAlign: 'center' }]}>{t.delivery}</Text>
+          </View>
+
+          {filteredCompanies.map((company, index) => {
+            const priceChange = getPriceChange();
+            return (
+              <Pressable
+                key={company.id}
+                style={[styles.tableRow, { backgroundColor: theme.cardBackground, borderBottomColor: theme.tableBorder }]}
+                onPress={() => router.push(`/(tabs)/(home)/cargo/${company.id}`)}
+              >
+                <View style={styles.rankCell}>
+                  <Text style={[styles.rankText, { color: theme.secondaryText }]}>#{index + 1}</Text>
+                </View>
+                <View style={styles.companyCell}>
+                  <View style={[styles.logoTable, { backgroundColor: theme.searchBackground }]}>
+                    <Text style={styles.logoTableText}>{company.logo}</Text>
+                  </View>
+                  <View style={styles.companyInfoTable}>
+                    <View style={styles.nameRowTable}>
+                      <Text style={[styles.companyNameTable, { color: theme.text }]} numberOfLines={1}>{company.name}</Text>
+                      {company.isVerified && (
+                        <Text style={[styles.verifiedBadgeTable, { backgroundColor: theme.verified }]}>✓</Text>
+                      )}
+                    </View>
+                    <Text style={[styles.ratingTable, { color: theme.secondaryText }]} numberOfLines={1}>⭐ {company.rating} · {company.totalShipments.toLocaleString()}</Text>
+                  </View>
+                </View>
+                <View style={styles.priceCell}>
+                  <Text style={[styles.priceCellText, { color: theme.text }]}>{convertPrice(company.pricePerKg)}</Text>
+                  {priceChange === 'stable' && (
+                    <View style={styles.priceChangeRow}>
+                      <Minus size={10} color={theme.secondaryText} />
+                      <Text style={[styles.priceChangeText, { color: theme.secondaryText }]}>{t.stable}</Text>
+                    </View>
+                  )}
+                  {priceChange === 'up' && (
+                    <View style={styles.priceChangeRow}>
+                      <ArrowUp size={10} color={theme.positive} />
+                      <Text style={[styles.priceChangeText, { color: theme.positive }]}>2%</Text>
+                    </View>
+                  )}
+                  {priceChange === 'down' && (
+                    <View style={styles.priceChangeRow}>
+                      <ArrowDown size={10} color={theme.negative} />
+                      <Text style={[styles.priceChangeText, { color: theme.negative }]}>2%</Text>
+                    </View>
+                  )}
+                </View>
+                <View style={styles.deliveryCell}>
+                  <Text style={[styles.deliveryCellText, { color: theme.primary }]}>{company.avgDeliveryDays}d</Text>
+                </View>
+              </Pressable>
+            );
+          })}
+        </View>
+
+        <View style={styles.bottomPadding} />
+      </ScrollView>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  header: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+  },
+  searchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    marginBottom: 12,
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    height: 44,
+    fontSize: 16,
+  },
+  filterContainer: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  filterChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  filterChipText: {
+    fontSize: 14,
+    fontWeight: "600" as const,
+  },
+  filterChipTextActive: {
+    color: "#ffffff",
+  },
+  currencyBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+  },
+  currencyLabel: {
+    fontSize: 13,
+    fontWeight: "600" as const,
+  },
+  currencyButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  currencyText: {
+    fontSize: 13,
+    fontWeight: "700" as const,
+  },
+  content: {
+    flex: 1,
+  },
+  section: {
+    paddingHorizontal: 16,
+    marginTop: 20,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 12,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "700" as const,
+    marginBottom: 12,
+  },
+  trendingCard: {
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 2,
+  },
+  cardHeader: {
+    flexDirection: "row",
+    marginBottom: 16,
+  },
+  logoContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+  },
+  logo: {
+    fontSize: 28,
+  },
+  cardInfo: {
+    flex: 1,
+    justifyContent: "center",
+  },
+  nameRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginBottom: 4,
+  },
+  companyName: {
+    fontSize: 18,
+    fontWeight: "700" as const,
+  },
+  verifiedBadge: {
+    fontSize: 14,
+    color: "#ffffff",
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    textAlign: "center",
+    lineHeight: 18,
+  },
+  ratingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  rating: {
+    fontSize: 14,
+    fontWeight: "600" as const,
+  },
+  reviewCount: {
+    fontSize: 13,
+  },
+  metricsRow: {
+    flexDirection: "row",
+    borderRadius: 12,
+    padding: 12,
+  },
+  metric: {
+    flex: 1,
+    alignItems: "center",
+  },
+  metricValue: {
+    fontSize: 18,
+    fontWeight: "700" as const,
+    marginBottom: 2,
+  },
+  metricLabel: {
+    fontSize: 12,
+  },
+  metricDivider: {
+    width: 1,
+    marginHorizontal: 8,
+  },
+  tableHeader: {
+    flexDirection: "row",
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderBottomWidth: 2,
+    marginBottom: 4,
+    borderRadius: 8,
+  },
+  tableHeaderText: {
+    fontSize: 11,
+    fontWeight: "700" as const,
+    textTransform: "uppercase" as const,
+  },
+  tableRow: {
+    flexDirection: "row",
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    alignItems: "center",
+    borderBottomWidth: 1,
+  },
+  rankCell: {
+    width: 40,
+  },
+  rankText: {
+    fontSize: 14,
+    fontWeight: "600" as const,
+  },
+  companyCell: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  logoTable: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 10,
+  },
+  logoTableText: {
+    fontSize: 18,
+  },
+  companyInfoTable: {
+    flex: 1,
+  },
+  nameRowTable: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginBottom: 2,
+  },
+  companyNameTable: {
+    fontSize: 15,
+    fontWeight: "600" as const,
+    flex: 1,
+  },
+  verifiedBadgeTable: {
+    fontSize: 10,
+    color: "#ffffff",
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    textAlign: "center",
+    lineHeight: 14,
+  },
+  ratingTable: {
+    fontSize: 12,
+  },
+  priceCell: {
+    width: 100,
+    alignItems: "flex-end",
+  },
+  priceCellText: {
+    fontSize: 15,
+    fontWeight: "700" as const,
+  },
+  priceChangeText: {
+    fontSize: 10,
+    fontWeight: "600" as const,
+  },
+  priceChangeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 2,
+    marginTop: 2,
+  },
+  deliveryCell: {
+    width: 60,
+    alignItems: "center",
+  },
+  deliveryCellText: {
+    fontSize: 14,
+    fontWeight: "700" as const,
+  },
+  bottomPadding: {
+    height: 20,
+  },
+});
