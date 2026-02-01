@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { TrendingUp, Search, ArrowUp, ArrowDown, Minus, Star } from "lucide-react-native";
+import { TrendingUp, Search, ArrowUp, ArrowDown, Minus, Star, SlidersHorizontal, CheckCircle, X } from "lucide-react-native";
 import React, { useState, useMemo } from "react";
 import {
   StyleSheet,
@@ -11,6 +11,7 @@ import {
   Pressable,
   useColorScheme,
   RefreshControl,
+  Modal,
 } from "react-native";
 
 import { cargoCompanies, type TransportType } from "@/mocks/cargo-data";
@@ -22,6 +23,9 @@ import { SkeletonCompanyCard, SkeletonTableRow } from "@/components/Skeleton";
 // Financial Dashboard Exchange Rate
 const EXCHANGE_RATE = 11.25;
 
+type SortOption = 'rating' | 'price' | 'delivery' | 'reliability';
+type SortDirection = 'asc' | 'desc';
+
 export default function HomeScreen() {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme ?? 'light'];
@@ -32,24 +36,63 @@ export default function HomeScreen() {
   const [selectedFilters, setSelectedFilters] = useState<TransportType[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [sortBy, setSortBy] = useState<SortOption>('rating');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [minRating, setMinRating] = useState<number | null>(null);
+  const [onlyVerified, setOnlyVerified] = useState(false);
+  const [showFiltersModal, setShowFiltersModal] = useState(false);
 
   const filteredCompanies = useMemo(() => {
     let filtered = cargoCompanies;
 
+    // Search filter
     if (searchQuery.trim()) {
       filtered = filtered.filter((company) =>
         company.name.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 
+    // Transport type filter
     if (selectedFilters.length > 0) {
       filtered = filtered.filter((company) =>
         company.transportTypes.some((type) => selectedFilters.includes(type))
       );
     }
 
-    return filtered;
-  }, [searchQuery, selectedFilters]);
+    // Rating filter
+    if (minRating !== null) {
+      filtered = filtered.filter((company) => company.rating >= minRating);
+    }
+
+    // Verified filter
+    if (onlyVerified) {
+      filtered = filtered.filter((company) => company.isVerified);
+    }
+
+    // Sorting
+    const sorted = [...filtered].sort((a, b) => {
+      let comparison = 0;
+      
+      switch (sortBy) {
+        case 'rating':
+          comparison = a.rating - b.rating;
+          break;
+        case 'price':
+          comparison = a.pricePerKg - b.pricePerKg;
+          break;
+        case 'delivery':
+          comparison = a.avgDeliveryDays - b.avgDeliveryDays;
+          break;
+        case 'reliability':
+          comparison = a.reliabilityScore - b.reliabilityScore;
+          break;
+      }
+      
+      return sortDirection === 'asc' ? comparison : -comparison;
+    });
+
+    return sorted;
+  }, [searchQuery, selectedFilters, minRating, onlyVerified, sortBy, sortDirection]);
 
   const rankedCompanies = useMemo(
     () => [...cargoCompanies].sort((a, b) => b.rating - a.rating).map((company, index) => ({ ...company, rank: index + 1 })),
@@ -92,6 +135,16 @@ export default function HomeScreen() {
     return labels[type];
   };
 
+  const getSortLabel = (option: SortOption): string => {
+    const labels: Record<SortOption, string> = {
+      rating: t.sortRating,
+      price: t.sortPrice,
+      delivery: t.sortDelivery,
+      reliability: t.sortReliability,
+    };
+    return labels[option];
+  };
+
   const onRefresh = async () => {
     setRefreshing(true);
     // Simulate API call
@@ -102,15 +155,26 @@ export default function HomeScreen() {
   return (
     <View style={[styles.container, { backgroundColor: theme.secondaryBackground }]}>
       <View style={[styles.header, { backgroundColor: theme.cardBackground, borderBottomColor: theme.border }]}>
-        <View style={[styles.searchContainer, { backgroundColor: theme.searchBackground }]}>
-          <Search color={theme.secondaryText} size={20} style={styles.searchIcon} />
-          <TextInput
-            style={[styles.searchInput, { color: theme.text }]}
-            placeholder={t.search}
-            placeholderTextColor={theme.secondaryText}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
+        <View style={styles.searchRow}>
+          <View style={[styles.searchContainer, { backgroundColor: theme.searchBackground }]}>
+            <Search color={theme.secondaryText} size={20} style={styles.searchIcon} />
+            <TextInput
+              style={[styles.searchInput, { color: theme.text }]}
+              placeholder={t.search}
+              placeholderTextColor={theme.secondaryText}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+          </View>
+          <TouchableOpacity
+            style={[styles.filterButton, { backgroundColor: theme.searchBackground, borderColor: theme.border }]}
+            onPress={() => setShowFiltersModal(true)}
+          >
+            <SlidersHorizontal color={theme.primary} size={20} />
+            {(minRating !== null || onlyVerified || sortBy !== 'rating' || sortDirection !== 'desc') && (
+              <View style={[styles.filterBadge, { backgroundColor: theme.primary }]} />
+            )}
+          </TouchableOpacity>
         </View>
 
         <View style={styles.filterContainer}>
@@ -343,6 +407,131 @@ export default function HomeScreen() {
 
         <View style={styles.bottomPadding} />
       </ScrollView>
+
+      {/* Filters & Sort Modal */}
+      <Modal
+        visible={showFiltersModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowFiltersModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: theme.cardBackground }]}>
+            <View style={[styles.modalHeader, { borderBottomColor: theme.border }]}>
+              <Text style={[styles.modalTitle, { color: theme.text }]}>{t.filtersAndSort}</Text>
+              <TouchableOpacity onPress={() => setShowFiltersModal(false)}>
+                <X color={theme.text} size={24} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
+              {/* Sort Section */}
+              <View style={styles.modalSection}>
+                <Text style={[styles.modalSectionTitle, { color: theme.text }]}>{t.sortBy}</Text>
+                {(['rating', 'price', 'delivery', 'reliability'] as SortOption[]).map((option) => (
+                  <TouchableOpacity
+                    key={option}
+                    style={[
+                      styles.modalOption,
+                      { backgroundColor: theme.searchBackground, borderColor: theme.border },
+                      sortBy === option && { backgroundColor: theme.primary + '20', borderColor: theme.primary },
+                    ]}
+                    onPress={() => {
+                      if (sortBy === option) {
+                        setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+                      } else {
+                        setSortBy(option);
+                        setSortDirection('desc');
+                      }
+                    }}
+                  >
+                    <Text style={[styles.modalOptionText, { color: theme.text }, sortBy === option && { color: theme.primary, fontWeight: '700' as const }]}>
+                      {getSortLabel(option)}
+                    </Text>
+                    {sortBy === option && (
+                      <View style={styles.sortDirectionContainer}>
+                        {sortDirection === 'asc' ? (
+                          <ArrowUp color={theme.primary} size={16} />
+                        ) : (
+                          <ArrowDown color={theme.primary} size={16} />
+                        )}
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {/* Rating Filter */}
+              <View style={styles.modalSection}>
+                <Text style={[styles.modalSectionTitle, { color: theme.text }]}>{t.minimumRating}</Text>
+                <TouchableOpacity
+                  style={[
+                    styles.modalOption,
+                    { backgroundColor: theme.searchBackground, borderColor: theme.border },
+                    minRating === null && { backgroundColor: theme.primary + '20', borderColor: theme.primary },
+                  ]}
+                  onPress={() => setMinRating(null)}
+                >
+                  <Text style={[styles.modalOptionText, { color: theme.text }, minRating === null && { color: theme.primary, fontWeight: '700' as const }]}>
+                    {t.allRatings}
+                  </Text>
+                </TouchableOpacity>
+                {[4.0, 4.5, 5.0].map((rating) => (
+                  <TouchableOpacity
+                    key={rating}
+                    style={[
+                      styles.modalOption,
+                      { backgroundColor: theme.searchBackground, borderColor: theme.border },
+                      minRating === rating && { backgroundColor: theme.primary + '20', borderColor: theme.primary },
+                    ]}
+                    onPress={() => setMinRating(rating)}
+                  >
+                    <View style={styles.ratingOptionRow}>
+                      <Star color={theme.warning} size={16} fill={theme.warning} />
+                      <Text style={[styles.modalOptionText, { color: theme.text }, minRating === rating && { color: theme.primary, fontWeight: '700' as const }]}>
+                        {rating}+ {t.stars}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {/* Verified Filter */}
+              <View style={styles.modalSection}>
+                <Text style={[styles.modalSectionTitle, { color: theme.text }]}>{t.additionalFilters}</Text>
+                <TouchableOpacity
+                  style={[
+                    styles.modalOption,
+                    { backgroundColor: theme.searchBackground, borderColor: theme.border },
+                    onlyVerified && { backgroundColor: theme.primary + '20', borderColor: theme.primary },
+                  ]}
+                  onPress={() => setOnlyVerified(!onlyVerified)}
+                >
+                  <View style={styles.checkboxRow}>
+                    <View style={[styles.checkbox, { borderColor: theme.border }, onlyVerified && { backgroundColor: theme.primary, borderColor: theme.primary }]}>
+                      {onlyVerified && <CheckCircle color="#ffffff" size={16} />}
+                    </View>
+                    <Text style={[styles.modalOptionText, { color: theme.text }]}>{t.onlyVerified}</Text>
+                  </View>
+                </TouchableOpacity>
+              </View>
+
+              {/* Reset Button */}
+              <TouchableOpacity
+                style={[styles.resetButton, { backgroundColor: theme.searchBackground }]}
+                onPress={() => {
+                  setSortBy('rating');
+                  setSortDirection('desc');
+                  setMinRating(null);
+                  setOnlyVerified(false);
+                }}
+              >
+                <Text style={[styles.resetButtonText, { color: theme.secondaryText }]}>{t.resetFilters}</Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -652,5 +841,103 @@ const styles = StyleSheet.create({
   },
   bottomPadding: {
     height: 20,
+  },
+  searchRow: {
+    flexDirection: "row",
+    gap: 8,
+    marginBottom: 12,
+  },
+  filterButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1,
+    position: "relative",
+  },
+  filterBadge: {
+    position: "absolute",
+    top: 6,
+    right: 6,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "flex-end",
+  },
+  modalContent: {
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    maxHeight: "80%",
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 20,
+    borderBottomWidth: 1,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "700" as const,
+  },
+  modalBody: {
+    padding: 20,
+  },
+  modalSection: {
+    marginBottom: 24,
+  },
+  modalSectionTitle: {
+    fontSize: 16,
+    fontWeight: "700" as const,
+    marginBottom: 12,
+  },
+  modalOption: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 8,
+  },
+  modalOptionText: {
+    fontSize: 15,
+    fontWeight: "600" as const,
+  },
+  sortDirectionContainer: {
+    marginLeft: 8,
+  },
+  ratingOptionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  checkboxRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 6,
+    borderWidth: 2,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  resetButton: {
+    padding: 16,
+    borderRadius: 12,
+    alignItems: "center",
+    marginTop: 8,
+  },
+  resetButtonText: {
+    fontSize: 15,
+    fontWeight: "600" as const,
   },
 });
