@@ -14,7 +14,7 @@ import {
   ThumbsUp,
   Edit3,
 } from "lucide-react-native";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   StyleSheet,
   Text,
@@ -61,12 +61,15 @@ export default function CargoDetailScreen() {
   const cargoRates = priceRates.filter((r) => r.cargoId === id);
   const cargoReviews = reviews.filter((r) => r.cargoId === id);
 
-  // Track view in history
+  // Track view in history (only once per company ID)
+  const lastTrackedId = useRef<string | null>(null);
   useEffect(() => {
-    if (cargo) {
+    if (cargo && id && id !== lastTrackedId.current) {
       addToHistory(cargo.id, cargo.name, cargo.logo);
+      lastTrackedId.current = id;
     }
-  }, [cargo, addToHistory]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
   // Generate unique Cargo Marking ID
   const generateMarkingId = () => {
