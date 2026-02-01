@@ -232,69 +232,37 @@ export default function ProfileScreen() {
         </View>
 
         <View style={styles.shipmentsSection}>
-          <Text style={styles.sectionTitle}>
-            {t.myShipments}
-          </Text>
-          {mockShipments.map((shipment) => (
-            <View key={shipment.id} style={styles.shipmentCard}>
-              <View style={styles.shipmentHeader}>
-                <View style={styles.shipmentIconContainer}>
-                  <Package color="#0284c7" size={20} />
-                </View>
-                <View style={styles.shipmentInfo}>
-                  <Text style={styles.shipmentCargoName}>
-                    {shipment.cargoName}
-                  </Text>
-                  <Text style={styles.shipmentTracking}>
-                    {shipment.trackingNumber}
-                  </Text>
-                </View>
-                <View
-                  style={[
-                    styles.shipmentStatusBadge,
-                    {
-                      backgroundColor: `${getStatusColor(shipment.status)}15`,
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.shipmentStatusText,
-                      { color: getStatusColor(shipment.status) },
-                    ]}
-                  >
-                    {getStatusLabel(shipment.status)}
-                  </Text>
-                </View>
-              </View>
-              <View style={styles.shipmentDetails}>
-                <View style={styles.shipmentDetailRow}>
-                  <Text style={styles.shipmentDetailLabel}>
-                    {t.weight}
-                  </Text>
-                  <Text style={styles.shipmentDetailValue}>
-                    {shipment.weight} kg
-                  </Text>
-                </View>
-                <View style={styles.shipmentDetailRow}>
-                  <Text style={styles.shipmentDetailLabel}>
-                    {t.description}
-                  </Text>
-                  <Text style={styles.shipmentDetailValue}>
-                    {shipment.description}
-                  </Text>
-                </View>
-                <View style={styles.shipmentDetailRow}>
-                  <Text style={styles.shipmentDetailLabel}>
-                    {t.estDelivery}
-                  </Text>
-                  <Text style={styles.shipmentDetailValue}>
-                    {shipment.estimatedDelivery}
-                  </Text>
-                </View>
-              </View>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>
+              {t.myShipments}
+            </Text>
+            <TouchableOpacity onPress={() => router.push('/profile/my-shipments')}>
+              <Text style={styles.seeAllLink}>{t.seeAll} →</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.shipmentsStatsCard}>
+            <View style={styles.shipmentsStat}>
+              <Text style={styles.shipmentsStatValue}>{activeShipments}</Text>
+              <Text style={styles.shipmentsStatLabel}>{t.active}</Text>
             </View>
-          ))}
+            <View style={styles.shipmentsStatDivider} />
+            <View style={styles.shipmentsStat}>
+              <Text style={styles.shipmentsStatValue}>{deliveredShipments}</Text>
+              <Text style={styles.shipmentsStatLabel}>{t.delivered}</Text>
+            </View>
+            <View style={styles.shipmentsStatDivider} />
+            <View style={styles.shipmentsStat}>
+              <Text style={styles.shipmentsStatValue}>{mockShipments.length}</Text>
+              <Text style={styles.shipmentsStatLabel}>{t.total}</Text>
+            </View>
+          </View>
+          <TouchableOpacity
+            style={styles.viewAllShipmentsButton}
+            onPress={() => router.push('/profile/my-shipments')}
+          >
+            <Package color="#0284c7" size={20} />
+            <Text style={styles.viewAllShipmentsText}>{t.viewAllShipments}</Text>
+          </TouchableOpacity>
         </View>
 
         {/* For Business Section */}
@@ -563,68 +531,60 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     marginBottom: 20,
   },
-  shipmentCard: {
-    backgroundColor: "#ffffff",
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
-  },
-  shipmentHeader: {
+  sectionHeader: {
     flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 12,
   },
-  shipmentIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#f1f5f9",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 12,
-  },
-  shipmentInfo: {
-    flex: 1,
-  },
-  shipmentCargoName: {
-    fontSize: 15,
+  seeAllLink: {
+    fontSize: 14,
     fontWeight: "600" as const,
-    color: "#0f172a",
-    marginBottom: 2,
+    color: "#0284c7",
   },
-  shipmentTracking: {
+  shipmentsStatsCard: {
+    backgroundColor: "#ffffff",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+    flexDirection: "row",
+    gap: 16,
+  },
+  shipmentsStat: {
+    flex: 1,
+    alignItems: "center",
+  },
+  shipmentsStatValue: {
+    fontSize: 24,
+    fontWeight: "800" as const,
+    color: "#0284c7",
+    marginBottom: 4,
+  },
+  shipmentsStatLabel: {
     fontSize: 12,
     color: "#64748b",
-    fontFamily: "monospace",
   },
-  shipmentStatusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
+  shipmentsStatDivider: {
+    width: 1,
+    backgroundColor: "#e2e8f0",
   },
-  shipmentStatusText: {
-    fontSize: 11,
-    fontWeight: "600" as const,
-  },
-  shipmentDetails: {
-    gap: 6,
-  },
-  shipmentDetailRow: {
+  viewAllShipmentsButton: {
+    backgroundColor: "#e0f2fe",
+    borderRadius: 12,
+    padding: 14,
     flexDirection: "row",
-    justifyContent: "space-between",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    borderWidth: 2,
+    borderColor: "#0284c7",
   },
-  shipmentDetailLabel: {
-    fontSize: 13,
-    color: "#64748b",
-  },
-  shipmentDetailValue: {
-    fontSize: 13,
-    fontWeight: "600" as const,
-    color: "#0f172a",
-    flex: 1,
-    textAlign: "right",
+  viewAllShipmentsText: {
+    fontSize: 15,
+    fontWeight: "700" as const,
+    color: "#0284c7",
   },
   businessSection: {
     paddingHorizontal: 16,

@@ -23,6 +23,12 @@ export default function ProfileLayout() {
         }}
       />
       <Stack.Screen
+        name="my-shipments"
+        options={{
+          title: t.myShipments,
+        }}
+      />
+      <Stack.Screen
         name="edit"
         options={{
           title: t.editProfile,
