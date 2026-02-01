@@ -23,6 +23,7 @@ const MAX_HISTORY_ITEMS = 50; // Maximum items to keep in history
 
 export const ViewHistoryProvider = ({ children }: { children: ReactNode }) => {
   const [history, setHistory] = useState<ViewHistoryItem[]>([]);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   useEffect(() => {
     const loadHistory = async () => {
@@ -36,19 +37,26 @@ export const ViewHistoryProvider = ({ children }: { children: ReactNode }) => {
         }
       } catch (e) {
         console.error('Failed to load view history', e);
+      } finally {
+        setIsInitialLoad(false);
       }
     };
     loadHistory();
   }, []);
 
-  const saveHistory = async (newHistory: ViewHistoryItem[]) => {
-    try {
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(newHistory));
-      setHistory(newHistory);
-    } catch (e) {
-      console.error('Failed to save view history', e);
+  // Save to AsyncStorage whenever history changes (but not on initial load)
+  useEffect(() => {
+    if (!isInitialLoad && history.length >= 0) {
+      const saveHistory = async () => {
+        try {
+          await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+        } catch (e) {
+          console.error('Failed to save view history', e);
+        }
+      };
+      saveHistory();
     }
-  };
+  }, [history, isInitialLoad]);
 
   const addToHistory = (companyId: string, companyName: string, companyLogo: string) => {
     setHistory((prev) => {
@@ -63,9 +71,7 @@ export const ViewHistoryProvider = ({ children }: { children: ReactNode }) => {
         viewedAt: Date.now(),
       };
       
-      const updated = [newItem, ...filtered].slice(0, MAX_HISTORY_ITEMS);
-      saveHistory(updated);
-      return updated;
+      return [newItem, ...filtered].slice(0, MAX_HISTORY_ITEMS);
     });
   };
 
@@ -80,9 +86,7 @@ export const ViewHistoryProvider = ({ children }: { children: ReactNode }) => {
 
   const removeFromHistory = async (companyId: string) => {
     setHistory((prev) => {
-      const filtered = prev.filter((item) => item.companyId !== companyId);
-      saveHistory(filtered);
-      return filtered;
+      return prev.filter((item) => item.companyId !== companyId);
     });
   };
 
