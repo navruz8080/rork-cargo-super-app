@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import {
   StyleSheet,
   Text,
@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Pressable,
   useColorScheme,
+  RefreshControl,
 } from "react-native";
 import { Star, TrendingDown, TrendingUp, Package } from "lucide-react-native";
 import { router } from "expo-router";
@@ -22,6 +23,13 @@ export default function FavoritesScreen() {
   const theme = Colors[colorScheme ?? "light"];
   const { t } = useLanguage();
   const { favorites, toggleFavorite } = useFavorites();
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    setRefreshing(false);
+  };
 
   const favoriteCompanies = useMemo(() => {
     return mockCargoCompanies.filter((company) => favorites.includes(company.id));
@@ -68,7 +76,17 @@ export default function FavoritesScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={theme.primary}
+            colors={[theme.primary]}
+          />
+        }
+      >
         {/* Comparison Banner */}
         {comparison && (
           <View style={[styles.comparisonBanner, { backgroundColor: theme.cardBackground, borderBottomColor: theme.border }]}>

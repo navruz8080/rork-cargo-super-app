@@ -10,12 +10,14 @@ import {
   TouchableOpacity,
   Pressable,
   useColorScheme,
+  RefreshControl,
 } from "react-native";
 
 import { cargoCompanies, type TransportType } from "@/mocks/cargo-data";
 import { Colors } from "@/constants/colors";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useFavorites } from "@/contexts/FavoritesContext";
+import { SkeletonCompanyCard, SkeletonTableRow } from "@/components/Skeleton";
 
 // Financial Dashboard Exchange Rate
 const EXCHANGE_RATE = 11.25;
@@ -28,6 +30,8 @@ export default function HomeScreen() {
   const [currency, setCurrency] = useState<'USD' | 'TJS'>('USD');
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedFilters, setSelectedFilters] = useState<TransportType[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const filteredCompanies = useMemo(() => {
     let filtered = cargoCompanies;
@@ -88,6 +92,13 @@ export default function HomeScreen() {
     return labels[type];
   };
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    setRefreshing(false);
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: theme.secondaryBackground }]}>
       <View style={[styles.header, { backgroundColor: theme.cardBackground, borderBottomColor: theme.border }]}>
@@ -127,7 +138,18 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        style={styles.content} 
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={theme.primary}
+            colors={[theme.primary]}
+          />
+        }
+      >
         <View style={[styles.currencyBar, { backgroundColor: theme.cardBackground, borderBottomColor: theme.border }]}>
           <Text style={[styles.currencyLabel, { color: theme.secondaryText }]}>{t.currency}:</Text>
           <TouchableOpacity
@@ -157,7 +179,13 @@ export default function HomeScreen() {
             <TrendingUp color={theme.primary} size={20} />
             <Text style={[styles.sectionTitle, { color: theme.text }]}>{t.trending}</Text>
           </View>
-          {trendingCompanies.map((company) => (
+          {isLoading ? (
+            <>
+              <SkeletonCompanyCard />
+              <SkeletonCompanyCard />
+            </>
+          ) : (
+            trendingCompanies.map((company) => (
             <View key={company.id} style={styles.trendingCardWrapper}>
               <Pressable
                 style={[styles.trendingCard, { backgroundColor: theme.cardBackground, borderColor: theme.primary }]}
@@ -213,7 +241,8 @@ export default function HomeScreen() {
                 />
               </TouchableOpacity>
             </View>
-          ))}
+          ))
+          )}
         </View>
 
         <View style={styles.section}>
@@ -234,7 +263,16 @@ export default function HomeScreen() {
             </Text>
           </View>
 
-          {filteredCompanies.map((company, index) => {
+          {isLoading ? (
+            <>
+              <SkeletonTableRow />
+              <SkeletonTableRow />
+              <SkeletonTableRow />
+              <SkeletonTableRow />
+              <SkeletonTableRow />
+            </>
+          ) : (
+            filteredCompanies.map((company, index) => {
             const priceChange = getPriceChange();
             const prices = convertPrice(company.pricePerKg);
             return (
@@ -299,7 +337,8 @@ export default function HomeScreen() {
                 </View>
               </Pressable>
             );
-          })}
+          })
+          )}
         </View>
 
         <View style={styles.bottomPadding} />

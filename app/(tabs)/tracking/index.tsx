@@ -8,26 +8,36 @@ import {
   TouchableOpacity,
   ScrollView,
   Alert,
+  ActivityIndicator,
+  useColorScheme,
 } from "react-native";
 
 import { mockShipments } from "@/mocks/cargo-data";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { Colors } from "@/constants/colors";
 
 // Financial Dashboard Exchange Rate
 const EXCHANGE_RATE = 11.25;
 
 export default function TrackingScreen() {
   const { language, t } = useLanguage();
+  const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme ?? 'light'];
   const [trackingNumber, setTrackingNumber] = useState<string>("");
   const [searchedShipment, setSearchedShipment] = useState<
     (typeof mockShipments)[0] | null
   >(null);
+  const [isSearching, setIsSearching] = useState(false);
 
-  const handleSearch = () => {
+  const handleSearch = async () => {
     if (!trackingNumber.trim()) {
       Alert.alert(t.error, t.pleaseEnterTracking);
       return;
     }
+    
+    setIsSearching(true);
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 800));
 
     // Search by full tracking number or partial number match
     const searchTerm = trackingNumber.trim().toLowerCase();
@@ -44,6 +54,8 @@ export default function TrackingScreen() {
       Alert.alert(t.notFound, t.noShipmentFound);
       setSearchedShipment(null);
     }
+    
+    setIsSearching(false);
   };
 
   const getStatusColor = (
@@ -115,8 +127,16 @@ export default function TrackingScreen() {
             autoCapitalize="characters"
             autoCorrect={false}
           />
-          <TouchableOpacity style={styles.searchButton} onPress={handleSearch}>
-            <Search color="#ffffff" size={20} />
+          <TouchableOpacity 
+            style={styles.searchButton} 
+            onPress={handleSearch}
+            disabled={isSearching}
+          >
+            {isSearching ? (
+              <ActivityIndicator color="#ffffff" size="small" />
+            ) : (
+              <Search color="#ffffff" size={20} />
+            )}
           </TouchableOpacity>
         </View>
       </View>

@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   useColorScheme,
   Pressable,
+  RefreshControl,
 } from "react-native";
 import { Package, CheckCircle, Truck, Clock, TrendingUp, DollarSign, MapPin } from "lucide-react-native";
 import { router } from "expo-router";
@@ -24,6 +25,13 @@ export default function MyShipmentsScreen() {
   const { t } = useLanguage();
 
   const [selectedFilter, setSelectedFilter] = useState<FilterType>("all");
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    setRefreshing(false);
+  };
 
   const filteredShipments = useMemo(() => {
     if (selectedFilter === "all") return mockShipments;
@@ -195,7 +203,18 @@ export default function MyShipmentsScreen() {
       </View>
 
       {/* Shipments List */}
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        style={styles.content} 
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={theme.primary}
+            colors={[theme.primary]}
+          />
+        }
+      >
         {filteredShipments.length > 0 ? (
           <View style={styles.shipmentsContainer}>
             {filteredShipments.map((shipment) => (
