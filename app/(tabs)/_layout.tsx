@@ -1,5 +1,5 @@
 import { Tabs, Redirect } from "expo-router";
-import { Home, MapPin, User } from "lucide-react-native";
+import { Home, MapPin, User, Calculator } from "lucide-react-native";
 import React from "react";
 import { ActivityIndicator, View } from "react-native";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -46,6 +46,13 @@ export default function TabLayout() {
         options={{
           title: t.home,
           tabBarIcon: ({ color, size }) => <Home color={color} size={size} />,
+        }}
+      />
+      <Tabs.Screen
+        name="calculator"
+        options={{
+          title: t.calculator,
+          tabBarIcon: ({ color, size }) => <Calculator color={color} size={size} />,
         }}
       />
       <Tabs.Screen

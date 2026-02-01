@@ -29,8 +29,13 @@ export default function TrackingScreen() {
       return;
     }
 
+    // Search by full tracking number or partial number match
+    const searchTerm = trackingNumber.trim().toLowerCase();
     const shipment = mockShipments.find(
-      (s) => s.trackingNumber.toLowerCase() === trackingNumber.toLowerCase()
+      (s) => 
+        s.trackingNumber.toLowerCase() === searchTerm ||
+        s.trackingNumber.toLowerCase().includes(searchTerm) ||
+        s.trackingNumber.match(new RegExp(searchTerm, 'i'))
     );
 
     if (shipment) {
@@ -46,15 +51,15 @@ export default function TrackingScreen() {
   ): string => {
     switch (status) {
       case "pending":
-        return "#64748b";
+        return "#f59e0b"; // Yellow - In China
       case "in_transit":
-        return "#0284c7";
+        return "#0284c7"; // Blue - In Transit
       case "at_customs":
-        return "#f59e0b";
+        return "#0284c7"; // Blue - In Transit
       case "ready_for_pickup":
-        return "#10b981";
+        return "#10b981"; // Green - Ready in Khujand/Dushanbe
       case "delivered":
-        return "#059669";
+        return "#059669"; // Dark Green - Delivered
       default:
         return "#64748b";
     }
@@ -77,15 +82,15 @@ export default function TrackingScreen() {
     const color = getStatusColor(status);
     switch (status) {
       case "pending":
-        return <Package color={color} size={24} />;
+        return <MapPin color={color} size={24} />; // In China
       case "in_transit":
-        return <Truck color={color} size={24} />;
+        return <Plane color={color} size={24} />; // In Transit
       case "at_customs":
-        return <Package color={color} size={24} />;
+        return <Truck color={color} size={24} />; // At Customs
       case "ready_for_pickup":
-        return <CheckCircle color={color} size={24} />;
+        return <CheckCircle color={color} size={24} />; // Ready
       case "delivered":
-        return <CheckCircle color={color} size={24} />;
+        return <CheckCircle color={color} size={24} />; // Delivered
       default:
         return <Package color={color} size={24} />;
     }
@@ -179,6 +184,16 @@ export default function TrackingScreen() {
                     {searchedShipment.estimatedDelivery}
                   </Text>
                 </View>
+                {(searchedShipment.status === "ready_for_pickup" || searchedShipment.status === "delivered") && (
+                  <View style={styles.detailRow}>
+                    <Text style={[styles.detailLabel, { color: "#10b981", fontWeight: "700" }]}>
+                      {t.finalPrice}
+                    </Text>
+                    <Text style={[styles.detailValue, { color: "#10b981", fontSize: 16, fontWeight: "800" }]}>
+                      {searchedShipment.codAmount?.toFixed(2) || (searchedShipment.weight * 3.5 * EXCHANGE_RATE).toFixed(2)} TJS
+                    </Text>
+                  </View>
+                )}
                 {searchedShipment.pickupPoint && (
                   <View style={styles.detailRow}>
                     <Text style={styles.detailLabel}>
@@ -356,8 +371,8 @@ export default function TrackingScreen() {
               </Text>
             </Text>
             <Text style={styles.tipExample}>• EA2024010001TJ</Text>
-            <Text style={styles.tipExample}>• DE2024010015TJ</Text>
-            <Text style={styles.tipExample}>• SR2023120050TJ</Text>
+            <Text style={styles.tipExample}>• DE2024010015TJ (or just "10015")</Text>
+            <Text style={styles.tipExample}>• SR2023120050TJ (or just "50")</Text>
           </View>
           <View style={styles.tipCard}>
             <Text style={styles.tipText}>
