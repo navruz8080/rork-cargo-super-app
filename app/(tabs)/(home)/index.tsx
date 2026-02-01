@@ -79,9 +79,9 @@ export default function HomeScreen() {
 
   const getTransportTypeLabel = (type: TransportType): string => {
     const labels: Record<TransportType, string> = {
-      air: "Air ✈️",
-      auto: "Auto 🚛",
-      rail: "Rail 🚂",
+      air: "Air",
+      auto: "Auto",
+      rail: "Rail",
     };
     return labels[type];
   };
@@ -364,7 +364,7 @@ const styles = StyleSheet.create({
   },
   section: {
     paddingHorizontal: 16,
-    marginTop: 20,
+    marginTop: 24,
   },
   sectionHeader: {
     flexDirection: "row",
@@ -375,7 +375,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: "700" as const,
-    marginBottom: 12,
+    marginBottom: 16,
   },
   trendingCard: {
     borderRadius: 12,

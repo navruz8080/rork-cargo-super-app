@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
-import { Building2, Upload } from 'lucide-react-native';
+import { Building2, Upload, AlertCircle } from 'lucide-react-native';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function RegisterCompanyScreen() {
@@ -232,9 +232,12 @@ export default function RegisterCompanyScreen() {
         </TouchableOpacity>
 
         <View style={styles.infoBox}>
-          <Text style={styles.infoText}>
-            📋 {t.applicationMessage}
-          </Text>
+          <View style={styles.infoBoxHeader}>
+            <AlertCircle color="#0c4a6e" size={18} />
+            <Text style={styles.infoText}>
+              {t.applicationMessage}
+            </Text>
+          </View>
         </View>
       </View>
     </ScrollView>
@@ -371,7 +374,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#bae6fd',
   },
+  infoBoxHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+  },
   infoText: {
+    flex: 1,
     fontSize: 13,
     color: '#0c4a6e',
     lineHeight: 20,

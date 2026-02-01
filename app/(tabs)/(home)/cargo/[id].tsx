@@ -10,6 +10,7 @@ import {
   MessageCircle,
   Tag,
   X,
+  AlertCircle,
 } from "lucide-react-native";
 import React, { useState } from "react";
 import {
@@ -76,11 +77,11 @@ export default function CargoDetailScreen() {
 
     const mainWarehouse = cargoWarehouses[0];
     const addressToUse = mainWarehouse.chineseAddress || mainWarehouse.address;
-    const textToCopy = `🏭 ${t.warehouseAddress} (收货地址):\n${mainWarehouse.name}\n${addressToUse}\n${mainWarehouse.city}\n📞 ${mainWarehouse.phone}\n\n📦 ${t.yourMarkingId} (您的标记号):\n${generatedMarkingId}\n\n⚠️ ${t.markingIdInstructions}\n重要：在1688/淘宝/速卖通下单时，请在包裹上写上此标记号`;
+    const textToCopy = `${t.warehouseAddress} (收货地址):\n${mainWarehouse.name}\n${addressToUse}\n${mainWarehouse.city}\n${t.phone}: ${mainWarehouse.phone}\n\n${t.yourMarkingId} (您的标记号):\n${generatedMarkingId}\n\n${t.markingIdInstructions}\n重要：在1688/淘宝/速卖通下单时，请在包裹上写上此标记号`;
 
     await Clipboard.setStringAsync(textToCopy);
     Alert.alert(
-      `✅ ${t.copied}`,
+      t.copied,
       ""
     );
   };
@@ -116,9 +117,9 @@ export default function CargoDetailScreen() {
 
   const getTransportTypeLabel = (type: TransportType): string => {
     const labels: Record<TransportType, string> = {
-      air: "Air ✈️",
-      auto: "Auto 🚛",
-      rail: "Rail 🚂",
+      air: "Air",
+      auto: "Auto",
+      rail: "Rail",
     };
     return labels[type];
   };
@@ -164,7 +165,13 @@ export default function CargoDetailScreen() {
       {cargoRates.map((rate) => (
         <View key={rate.id} style={[styles.rateCard, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}>
           <View style={styles.rateHeader}>
-            <Text style={[styles.rateCategory, { color: theme.text }]}>{rate.category}</Text>
+            <Text 
+              style={[styles.rateCategory, { color: theme.text }]}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              {rate.category}
+            </Text>
             <View>
               <Text style={[styles.ratePrice, { color: theme.primary }]}>{convertPrice(rate.pricePerKg)}/kg</Text>
               {currency === 'USD' && (
@@ -363,7 +370,7 @@ export default function CargoDetailScreen() {
         onPress={handleGetMarkingId}
       >
         <Tag color="#ffffff" size={22} />
-        <Text style={styles.markingButtonText}>📦 {t.getShippingAddress}</Text>
+        <Text style={styles.markingButtonText}>{t.getShippingAddress}</Text>
       </TouchableOpacity>
 
       <View style={[styles.statsBar, { backgroundColor: theme.cardBackground, borderBottomColor: theme.border }]}>
@@ -426,6 +433,8 @@ export default function CargoDetailScreen() {
               { color: theme.secondaryText },
               activeTab === "rates" && { color: theme.primary },
             ]}
+            numberOfLines={1}
+            adjustsFontSizeToFit
           >
             {t.rates}
           </Text>
@@ -440,6 +449,8 @@ export default function CargoDetailScreen() {
               { color: theme.secondaryText },
               activeTab === "warehouses" && { color: theme.primary },
             ]}
+            numberOfLines={1}
+            adjustsFontSizeToFit
           >
             {t.warehouses}
           </Text>
@@ -454,6 +465,8 @@ export default function CargoDetailScreen() {
               { color: theme.secondaryText },
               activeTab === "reviews" && { color: theme.primary },
             ]}
+            numberOfLines={1}
+            adjustsFontSizeToFit
           >
             {t.reviews}
           </Text>
@@ -468,8 +481,10 @@ export default function CargoDetailScreen() {
               { color: theme.secondaryText },
               activeTab === "tracking" && { color: theme.primary },
             ]}
+            numberOfLines={1}
+            adjustsFontSizeToFit
           >
-            {t.tracking}
+            {t.trackingShort}
           </Text>
         </TouchableOpacity>
       </View>
@@ -506,9 +521,12 @@ export default function CargoDetailScreen() {
               {cargoWarehouses.length > 0 && (
                 <>
                   <View style={[styles.modalSection, { backgroundColor: theme.searchBackground }]}>
-                    <Text style={[styles.modalSectionTitle, { color: theme.text }]}>
-                      🏭 {t.warehouseAddress} (收货地址)
-                    </Text>
+                    <View style={styles.modalSectionTitleContainer}>
+                      <MapPin color={theme.primary} size={20} />
+                      <Text style={[styles.modalSectionTitle, { color: theme.text }]}>
+                        {t.warehouseAddress} (收货地址)
+                      </Text>
+                    </View>
                     <Text style={[styles.warehouseAddressText, { color: theme.text }]}>
                       {cargoWarehouses[0].name}
                     </Text>
@@ -524,20 +542,26 @@ export default function CargoDetailScreen() {
                       {cargoWarehouses[0].city}
                     </Text>
                     <Text style={[styles.warehouseAddressText, { color: theme.primary }]}>
-                      📞 {cargoWarehouses[0].phone}
+                      <Phone color={theme.primary} size={16} /> {cargoWarehouses[0].phone}
                     </Text>
                   </View>
 
                   <View style={[styles.modalSection, { backgroundColor: theme.warning + '15', borderColor: theme.warning, borderWidth: 2 }]}>
-                    <Text style={[styles.modalSectionTitle, { color: theme.text }]}>
-                      📦 {t.yourMarkingId} (您的标记号)
-                    </Text>
+                    <View style={styles.modalSectionTitleContainer}>
+                      <Tag color={theme.warning} size={20} />
+                      <Text style={[styles.modalSectionTitle, { color: theme.text }]}>
+                        {t.yourMarkingId} (您的标记号)
+                      </Text>
+                    </View>
                     <Text style={[styles.markingIdText, { color: theme.warning }]}>
                       {generatedMarkingId}
                     </Text>
-                    <Text style={[styles.markingIdDescription, { color: theme.secondaryText }]}>
-                      ⚠️ {t.markingIdInstructions}
-                    </Text>
+                    <View style={styles.markingWarningContainer}>
+                      <AlertCircle color={theme.secondaryText} size={16} />
+                      <Text style={[styles.markingIdDescription, { color: theme.secondaryText }]}>
+                        {t.markingIdInstructions}
+                      </Text>
+                    </View>
                     <Text style={[styles.markingIdDescription, { color: theme.secondaryText, fontSize: 12, marginTop: 4 }]}>
                       在1688/淘宝/速卖通下单时，请在包裹上和订单备注中写上此标记号
                     </Text>
@@ -554,9 +578,12 @@ export default function CargoDetailScreen() {
                   </TouchableOpacity>
 
                   <View style={[styles.instructionBox, { backgroundColor: theme.searchBackground }]}>
-                    <Text style={[styles.instructionTitle, { color: theme.text }]}>
-                      💡 {t.howToUse}
-                    </Text>
+                    <View style={styles.instructionTitleContainer}>
+                      <AlertCircle color={theme.primary} size={18} />
+                      <Text style={[styles.instructionTitle, { color: theme.text }]}>
+                        {t.howToUse}
+                      </Text>
+                    </View>
                     <Text style={[styles.instructionText, { color: theme.secondaryText }]}>
                       1. {t.copyAddressStep}
                     </Text>
@@ -724,18 +751,22 @@ const styles = StyleSheet.create({
   tabs: {
     flexDirection: "row",
     borderBottomWidth: 2,
+    justifyContent: 'space-around',
+    paddingHorizontal: 8,
   },
   tab: {
     flex: 1,
-    paddingVertical: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 4,
     alignItems: "center",
     borderBottomWidth: 2,
     borderBottomColor: "transparent",
     marginBottom: -2,
   },
   tabText: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: "600" as const,
+    textAlign: "center",
   },
   scrollView: {
     flex: 1,
@@ -744,9 +775,9 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   tabDescription: {
-    fontSize: 14,
+    fontSize: 13,
     marginBottom: 16,
-    lineHeight: 20,
+    lineHeight: 18,
   },
   chartContainer: {
     padding: 16,
@@ -780,9 +811,12 @@ const styles = StyleSheet.create({
   },
   rateCard: {
     borderRadius: 12,
-    padding: 14,
+    padding: 16,
     marginBottom: 12,
     borderWidth: 1,
+    minHeight: 140,
+    flexDirection: 'column',
+    justifyContent: 'space-between',
   },
   rateHeader: {
     flexDirection: "row",
@@ -791,16 +825,18 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   rateCategory: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "600" as const,
+    flex: 1,
+    numberOfLines: 1,
   },
   ratePrice: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: "700" as const,
     textAlign: "right",
   },
   ratePriceAlt: {
-    fontSize: 12,
+    fontSize: 11,
     textAlign: "right",
     marginTop: 2,
   },
@@ -1066,9 +1102,26 @@ const styles = StyleSheet.create({
   modalSectionTitle: {
     fontSize: 14,
     fontWeight: "700" as const,
-    marginBottom: 12,
     textTransform: "uppercase" as const,
     letterSpacing: 1,
+  },
+  modalSectionTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12,
+  },
+  markingWarningContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    marginTop: 8,
+  },
+  instructionTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12,
   },
   warehouseAddressText: {
     fontSize: 15,

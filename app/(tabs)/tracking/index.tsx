@@ -223,9 +223,12 @@ export default function TrackingScreen() {
                     <View style={styles.timelineLine} />
                   </View>
                   <View style={styles.timelineContent}>
-                    <Text style={styles.timelineTitle}>
-                      📝 {t.labelCreated}
-                    </Text>
+                    <View style={styles.timelineTitleContainer}>
+                      <Package color="#0284c7" size={18} />
+                      <Text style={styles.timelineTitle}>
+                        {t.labelCreated}
+                      </Text>
+                    </View>
                     <Text style={styles.timelineDate}>
                       {searchedShipment.createdAt}
                     </Text>
@@ -247,9 +250,12 @@ export default function TrackingScreen() {
                     <View style={styles.timelineLine} />
                   </View>
                   <View style={styles.timelineContent}>
-                    <Text style={styles.timelineTitle}>
-                      🏭 {t.arrivedChinaHub}
-                    </Text>
+                    <View style={styles.timelineTitleContainer}>
+                      <MapPin color="#0284c7" size={18} />
+                      <Text style={styles.timelineTitle}>
+                        {t.arrivedChinaHub}
+                      </Text>
+                    </View>
                     <Text style={styles.timelineDate}>
                       {(searchedShipment.status !== "pending") ? t.processed : t.pending}
                     </Text>
@@ -277,9 +283,12 @@ export default function TrackingScreen() {
                     <View style={styles.timelineLine} />
                   </View>
                   <View style={styles.timelineContent}>
-                    <Text style={styles.timelineTitle}>
-                      ✈️ {t.packageInTransit}
-                    </Text>
+                    <View style={styles.timelineTitleContainer}>
+                      <Plane color="#0284c7" size={18} />
+                      <Text style={styles.timelineTitle}>
+                        {t.packageInTransit}
+                      </Text>
+                    </View>
                     <Text style={styles.timelineDate}>
                       {(searchedShipment.status === "in_transit" ||
                         searchedShipment.status === "at_customs" ||
@@ -307,9 +316,12 @@ export default function TrackingScreen() {
                     </View>
                   </View>
                   <View style={styles.timelineContent}>
-                    <Text style={styles.timelineTitle}>
-                      🎉 {t.readyAtDestination}
-                    </Text>
+                    <View style={styles.timelineTitleContainer}>
+                      <CheckCircle color="#10b981" size={18} />
+                      <Text style={styles.timelineTitle}>
+                        {t.readyAtDestination}
+                      </Text>
+                    </View>
                     <Text style={styles.timelineDate}>
                       {(searchedShipment.status === "ready_for_pickup" ||
                         searchedShipment.status === "delivered")
@@ -331,9 +343,12 @@ export default function TrackingScreen() {
         )}
 
         <View style={styles.tipsSection}>
-          <Text style={styles.sectionTitle}>
-            💡 {t.trackingTips}
-          </Text>
+          <View style={styles.tipsSectionHeader}>
+            <AlertCircle color="#0284c7" size={20} />
+            <Text style={styles.sectionTitle}>
+              {t.trackingTips}
+            </Text>
+          </View>
           <View style={styles.tipCard}>
             <Text style={styles.tipText}>
               <Text style={styles.tipBold}>
@@ -566,11 +581,16 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: 2,
   },
+  timelineTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 4,
+  },
   timelineTitle: {
     fontSize: 16,
     fontWeight: "700" as const,
     color: "#0f172a",
-    marginBottom: 4,
   },
   timelineDate: {
     fontSize: 13,
@@ -584,6 +604,12 @@ const styles = StyleSheet.create({
   },
   tipsSection: {
     padding: 16,
+  },
+  tipsSectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12,
   },
   tipCard: {
     backgroundColor: "#ffffff",
