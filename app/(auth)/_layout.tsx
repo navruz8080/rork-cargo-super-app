@@ -1,15 +1,9 @@
 import { Stack } from "expo-router";
 import { useLanguage } from "@/contexts/LanguageContext";
 
-export default function TrackingLayout() {
-  const { language } = useLanguage();
+export default function AuthLayout() {
+  const { t } = useLanguage();
   
-  const getTitle = () => {
-    if (language === 'en') return 'Track Shipment';
-    if (language === 'ru') return 'Отслеживание';
-    return 'Пайгирӣ';
-  };
-
   return (
     <Stack
       screenOptions={{
@@ -23,9 +17,17 @@ export default function TrackingLayout() {
       }}
     >
       <Stack.Screen
-        name="index"
+        name="login"
         options={{
-          title: getTitle(),
+          title: t.signIn,
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="register"
+        options={{
+          title: t.signUp,
+          headerShown: false,
         }}
       />
     </Stack>

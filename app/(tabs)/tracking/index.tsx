@@ -1,4 +1,4 @@
-import { Search, Package, CheckCircle, Truck } from "lucide-react-native";
+import { Search, Package, CheckCircle, Truck, MapPin, Clock, AlertCircle, Plane } from "lucide-react-native";
 import React, { useState } from "react";
 import {
   StyleSheet,
@@ -13,8 +13,11 @@ import {
 import { mockShipments } from "@/mocks/cargo-data";
 import { useLanguage } from "@/contexts/LanguageContext";
 
+// Financial Dashboard Exchange Rate
+const EXCHANGE_RATE = 11.25;
+
 export default function TrackingScreen() {
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const [trackingNumber, setTrackingNumber] = useState<string>("");
   const [searchedShipment, setSearchedShipment] = useState<
     (typeof mockShipments)[0] | null
@@ -22,9 +25,7 @@ export default function TrackingScreen() {
 
   const handleSearch = () => {
     if (!trackingNumber.trim()) {
-      const errorTitle = language === 'en' ? 'Error' : language === 'ru' ? 'Ошибка' : 'Хато';
-      const errorMsg = language === 'en' ? 'Please enter a tracking number' : language === 'ru' ? 'Введите трек-номер' : 'Рақами пайгириро ворид кунед';
-      Alert.alert(errorTitle, errorMsg);
+      Alert.alert(t.error, t.pleaseEnterTracking);
       return;
     }
 
@@ -35,9 +36,7 @@ export default function TrackingScreen() {
     if (shipment) {
       setSearchedShipment(shipment);
     } else {
-      const notFoundTitle = language === 'en' ? 'Not Found' : language === 'ru' ? 'Не найдено' : 'Ёфт нашуд';
-      const notFoundMsg = language === 'en' ? 'No shipment found with this tracking number. Please check and try again.' : language === 'ru' ? 'Отправление с таким номером не найдено. Проверьте и попробуйте снова.' : 'Бо ин рақам боркашӣ ёфт нашуд. Лутфан санҷед ва аз нав кӯшиш кунед.';
-      Alert.alert(notFoundTitle, notFoundMsg);
+      Alert.alert(t.notFound, t.noShipmentFound);
       setSearchedShipment(null);
     }
   };
@@ -64,14 +63,14 @@ export default function TrackingScreen() {
   const getStatusLabel = (
     status: (typeof mockShipments)[0]["status"]
   ): string => {
-    const statusMap: Record<typeof status, Record<string, string>> = {
-      pending: { en: 'Pending', ru: 'Ожидание', tg: 'Интизорӣ' },
-      in_transit: { en: 'In Transit', ru: 'В пути', tg: 'Дар роҳ' },
-      at_customs: { en: 'At Customs', ru: 'На таможне', tg: 'Дар гумрук' },
-      ready_for_pickup: { en: 'Ready for Pickup', ru: 'Готово к выдаче', tg: 'Омода барои гирифтан' },
-      delivered: { en: 'Delivered', ru: 'Доставлено', tg: 'Расонида шуд' },
+    const statusMap: Record<typeof status, string> = {
+      pending: t.pending,
+      in_transit: t.inTransit,
+      at_customs: t.atCustoms,
+      ready_for_pickup: t.readyForPickup,
+      delivered: t.delivered,
     };
-    return statusMap[status]?.[language] || 'Unknown';
+    return statusMap[status] || 'Unknown';
   };
 
   const getStatusIcon = (status: (typeof mockShipments)[0]["status"]) => {
@@ -95,16 +94,16 @@ export default function TrackingScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.searchSection}>
-        <Text style={styles.searchTitle}>
-          {language === 'en' ? 'Track Your Shipment' : language === 'ru' ? 'Отследить посылку' : 'Пайгирии боркашӣ'}
+        <Text style={styles.searchTitle} numberOfLines={1} adjustsFontSizeToFit>
+          {t.trackYourShipment}
         </Text>
         <Text style={styles.searchDescription}>
-          {language === 'en' ? 'Enter your tracking number to see real-time status' : language === 'ru' ? 'Введите трек-номер для просмотра статуса' : 'Рақами пайгириро барои дидани вазъият ворид кунед'}
+          {t.enterTrackingNumber}
         </Text>
         <View style={styles.searchContainer}>
           <TextInput
             style={styles.searchInput}
-            placeholder={language === 'en' ? 'Enter tracking number...' : language === 'ru' ? 'Введите трек-номер...' : 'Рақами пайгириро ворид кунед...'}
+            placeholder={t.enterTrackingPlaceholder}
             placeholderTextColor="#94a3b8"
             value={trackingNumber}
             onChangeText={setTrackingNumber}
@@ -121,7 +120,7 @@ export default function TrackingScreen() {
         {searchedShipment && (
           <View style={styles.resultSection}>
             <Text style={styles.sectionTitle}>
-              {language === 'en' ? 'Tracking Results' : language === 'ru' ? 'Результаты отслеживания' : 'Натиҷаҳои пайгирӣ'}
+              {t.trackingResults}
             </Text>
             <View style={styles.shipmentCard}>
               <View style={styles.shipmentHeader}>
@@ -158,7 +157,7 @@ export default function TrackingScreen() {
               <View style={styles.shipmentDetails}>
                 <View style={styles.detailRow}>
                   <Text style={styles.detailLabel}>
-                    {language === 'en' ? 'Weight:' : language === 'ru' ? 'Вес:' : 'Вазн:'}
+                    {t.weight}
                   </Text>
                   <Text style={styles.detailValue}>
                     {searchedShipment.weight} kg
@@ -166,7 +165,7 @@ export default function TrackingScreen() {
                 </View>
                 <View style={styles.detailRow}>
                   <Text style={styles.detailLabel}>
-                    {language === 'en' ? 'Description:' : language === 'ru' ? 'Описание:' : 'Тавсиф:'}
+                    {t.description}
                   </Text>
                   <Text style={styles.detailValue}>
                     {searchedShipment.description}
@@ -174,15 +173,7 @@ export default function TrackingScreen() {
                 </View>
                 <View style={styles.detailRow}>
                   <Text style={styles.detailLabel}>
-                    {language === 'en' ? 'Created:' : language === 'ru' ? 'Создано:' : 'Эҷод шуд:'}
-                  </Text>
-                  <Text style={styles.detailValue}>
-                    {searchedShipment.createdAt}
-                  </Text>
-                </View>
-                <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>
-                    {language === 'en' ? 'Est. Delivery:' : language === 'ru' ? 'Ожид. доставка:' : 'Расонидан:'}
+                    {t.estDelivery}
                   </Text>
                   <Text style={styles.detailValue}>
                     {searchedShipment.estimatedDelivery}
@@ -191,7 +182,7 @@ export default function TrackingScreen() {
                 {searchedShipment.pickupPoint && (
                   <View style={styles.detailRow}>
                     <Text style={styles.detailLabel}>
-                      {language === 'en' ? 'Pickup Point:' : language === 'ru' ? 'Пункт выдачи:' : 'Нуқтаи гирифтан:'}
+                      {t.address}
                     </Text>
                     <Text style={styles.detailValue}>
                       {searchedShipment.pickupPoint}
@@ -200,106 +191,137 @@ export default function TrackingScreen() {
                 )}
               </View>
 
+              {/* COD Banner for Ready for Pickup */}
+              {searchedShipment.status === "ready_for_pickup" && (
+                <View style={styles.codBanner}>
+                  <AlertCircle color="#854d0e" size={24} />
+                  <View style={styles.codBannerContent}>
+                    <Text style={styles.codBannerTitle}>
+                      {t.statusReadyForPickup}
+                    </Text>
+                    <Text style={styles.codBannerAmount}>
+                      {t.amountToPay}
+                      <Text style={styles.codBannerAmountValue}>
+                        {searchedShipment.codAmount?.toFixed(2) || (searchedShipment.weight * 3.5 * EXCHANGE_RATE).toFixed(2)} TJS
+                      </Text>
+                    </Text>
+                  </View>
+                </View>
+              )}
+
+              {/* Enhanced Vertical Timeline */}
               <View style={styles.timeline}>
+                {/* Step 1: Label Created */}
                 <View style={styles.timelineItem}>
-                  <View
-                    style={[
+                  <View style={styles.timelineLeftColumn}>
+                    <View style={[
                       styles.timelineDot,
                       styles.timelineDotCompleted,
-                    ]}
-                  />
+                    ]}>
+                      <Package color="#ffffff" size={16} />
+                    </View>
+                    <View style={styles.timelineLine} />
+                  </View>
                   <View style={styles.timelineContent}>
                     <Text style={styles.timelineTitle}>
-                      {language === 'en' ? 'Order Created' : language === 'ru' ? 'Заказ создан' : 'Фармоиш эҷод шуд'}
+                      📝 {t.labelCreated}
                     </Text>
                     <Text style={styles.timelineDate}>
                       {searchedShipment.createdAt}
                     </Text>
+                    <Text style={styles.timelineDescription}>
+                      {t.packageRegistered}
+                    </Text>
                   </View>
                 </View>
 
+                {/* Step 2: Arrived at China Hub */}
                 <View style={styles.timelineItem}>
-                  <View
-                    style={[
+                  <View style={styles.timelineLeftColumn}>
+                    <View style={[
                       styles.timelineDot,
-                      searchedShipment.status !== "pending" &&
-                        styles.timelineDotCompleted,
-                    ]}
-                  />
+                      (searchedShipment.status !== "pending") && styles.timelineDotCompleted,
+                    ]}>
+                      <MapPin color={(searchedShipment.status !== "pending") ? "#ffffff" : "#64748b"} size={16} />
+                    </View>
+                    <View style={styles.timelineLine} />
+                  </View>
                   <View style={styles.timelineContent}>
                     <Text style={styles.timelineTitle}>
-                      {language === 'en' ? 'In Transit' : language === 'ru' ? 'В пути' : 'Дар роҳ'}
+                      🏭 {t.arrivedChinaHub}
                     </Text>
                     <Text style={styles.timelineDate}>
-                      {searchedShipment.status !== "pending"
-                        ? (language === 'en' ? 'In progress' : language === 'ru' ? 'В процессе' : 'Дар ҷараён')
-                        : (language === 'en' ? 'Pending' : language === 'ru' ? 'Ожидание' : 'Интизорӣ')}
+                      {(searchedShipment.status !== "pending") ? t.processed : t.pending}
+                    </Text>
+                    <Text style={styles.timelineDescription}>
+                      {t.packageAtWarehouse}
                     </Text>
                   </View>
                 </View>
 
+                {/* Step 3: In Transit */}
                 <View style={styles.timelineItem}>
-                  <View
-                    style={[
+                  <View style={styles.timelineLeftColumn}>
+                    <View style={[
                       styles.timelineDot,
-                      (searchedShipment.status === "at_customs" ||
+                      (searchedShipment.status === "in_transit" ||
+                        searchedShipment.status === "at_customs" ||
                         searchedShipment.status === "ready_for_pickup" ||
-                        searchedShipment.status === "delivered") &&
-                        styles.timelineDotCompleted,
-                    ]}
-                  />
+                        searchedShipment.status === "delivered") && styles.timelineDotCompleted,
+                    ]}>
+                      <Plane color={(searchedShipment.status === "in_transit" ||
+                        searchedShipment.status === "at_customs" ||
+                        searchedShipment.status === "ready_for_pickup" ||
+                        searchedShipment.status === "delivered") ? "#ffffff" : "#64748b"} size={16} />
+                    </View>
+                    <View style={styles.timelineLine} />
+                  </View>
                   <View style={styles.timelineContent}>
                     <Text style={styles.timelineTitle}>
-                      {language === 'en' ? 'At Customs' : language === 'ru' ? 'На таможне' : 'Дар гумрук'}
+                      ✈️ {t.packageInTransit}
                     </Text>
                     <Text style={styles.timelineDate}>
-                      {searchedShipment.status === "at_customs" ||
-                      searchedShipment.status === "ready_for_pickup" ||
-                      searchedShipment.status === "delivered"
-                        ? (language === 'en' ? 'Cleared' : language === 'ru' ? 'Прошло' : 'Гузашт')
-                        : (language === 'en' ? 'Pending' : language === 'ru' ? 'Ожидание' : 'Интизорӣ')}
+                      {(searchedShipment.status === "in_transit" ||
+                        searchedShipment.status === "at_customs" ||
+                        searchedShipment.status === "ready_for_pickup" ||
+                        searchedShipment.status === "delivered")
+                        ? t.onTheWay
+                        : t.waitingArrival}
+                    </Text>
+                    <Text style={styles.timelineDescription}>
+                      {t.packageTransporting}
                     </Text>
                   </View>
                 </View>
 
-                <View style={styles.timelineItem}>
-                  <View
-                    style={[
+                {/* Step 4: Ready at Destination */}
+                <View style={[styles.timelineItem, styles.timelineItemLast]}>
+                  <View style={styles.timelineLeftColumn}>
+                    <View style={[
                       styles.timelineDot,
                       (searchedShipment.status === "ready_for_pickup" ||
-                        searchedShipment.status === "delivered") &&
-                        styles.timelineDotCompleted,
-                    ]}
-                  />
-                  <View style={styles.timelineContent}>
-                    <Text style={styles.timelineTitle}>
-                      {language === 'en' ? 'Ready for Pickup' : language === 'ru' ? 'Готово к выдаче' : 'Омода барои гирифтан'}
-                    </Text>
-                    <Text style={styles.timelineDate}>
-                      {searchedShipment.status === "ready_for_pickup" ||
-                      searchedShipment.status === "delivered"
-                        ? searchedShipment.estimatedDelivery
-                        : (language === 'en' ? 'Pending' : language === 'ru' ? 'Ожидание' : 'Интизорӣ')}
-                    </Text>
+                        searchedShipment.status === "delivered") && styles.timelineDotCompleted,
+                    ]}>
+                      <CheckCircle color={(searchedShipment.status === "ready_for_pickup" ||
+                        searchedShipment.status === "delivered") ? "#ffffff" : "#64748b"} size={16} />
+                    </View>
                   </View>
-                </View>
-
-                <View style={[styles.timelineItem, styles.timelineItemLast]}>
-                  <View
-                    style={[
-                      styles.timelineDot,
-                      searchedShipment.status === "delivered" &&
-                        styles.timelineDotCompleted,
-                    ]}
-                  />
                   <View style={styles.timelineContent}>
                     <Text style={styles.timelineTitle}>
-                      {language === 'en' ? 'Delivered' : language === 'ru' ? 'Доставлено' : 'Расонида шуд'}
+                      🎉 {t.readyAtDestination}
                     </Text>
                     <Text style={styles.timelineDate}>
-                      {searchedShipment.status === "delivered"
-                        ? (language === 'en' ? 'Completed' : language === 'ru' ? 'Завершено' : 'Анҷом ёфт')
-                        : (language === 'en' ? 'Pending' : language === 'ru' ? 'Ожидание' : 'Интизорӣ')}
+                      {(searchedShipment.status === "ready_for_pickup" ||
+                        searchedShipment.status === "delivered")
+                        ? searchedShipment.estimatedDelivery
+                        : t.waitingArrival}
+                    </Text>
+                    <Text style={styles.timelineDescription}>
+                      {(searchedShipment.status === "ready_for_pickup")
+                        ? t.payOnDelivery
+                        : (searchedShipment.status === "delivered")
+                          ? t.packageDeliveredSuccess
+                          : t.waitingArrival}
                     </Text>
                   </View>
                 </View>
@@ -310,12 +332,12 @@ export default function TrackingScreen() {
 
         <View style={styles.tipsSection}>
           <Text style={styles.sectionTitle}>
-            💡 {language === 'en' ? 'Tracking Tips' : language === 'ru' ? 'Советы по отслеживанию' : 'Маслиҳатҳои пайгирӣ'}
+            💡 {t.trackingTips}
           </Text>
           <View style={styles.tipCard}>
             <Text style={styles.tipText}>
               <Text style={styles.tipBold}>
-                {language === 'en' ? 'Try these:' : language === 'ru' ? 'Попробуйте эти:' : 'Инҳоро санҷед:'}
+                {t.tryThese}
               </Text>
             </Text>
             <Text style={styles.tipExample}>• EA2024010001TJ</Text>
@@ -325,17 +347,17 @@ export default function TrackingScreen() {
           <View style={styles.tipCard}>
             <Text style={styles.tipText}>
               <Text style={styles.tipBold}>
-                {language === 'en' ? 'Multiple Carriers:' : language === 'ru' ? 'Несколько перевозчиков:' : 'Чанд ҳамлбарор:'}
+                {t.multipleCarriers}
               </Text>{' '}
-              {language === 'en' ? 'Our unified tracking works with all cargo companies. Just enter your tracking number!' : language === 'ru' ? 'Наша единая система отслеживания работает со всеми грузовыми компаниями. Просто введите трек-номер!' : 'Системаи якпорчаи пайгирии мо бо ҳамаи ширкатҳои боркаш кор мекунад. Факат рақами пайгириро ворид кунед!'}
+              {t.multipleCarriersDesc}
             </Text>
           </View>
           <View style={styles.tipCard}>
             <Text style={styles.tipText}>
               <Text style={styles.tipBold}>
-                {language === 'en' ? 'Updates:' : language === 'ru' ? 'Обновления:' : 'Навсозиҳо:'}
+                {t.updates}
               </Text>{' '}
-              {language === 'en' ? 'Tracking info updates every 6 hours. Check back regularly for the latest status.' : language === 'ru' ? 'Информация о отслеживании обновляется каждые 6 часов. Проверяйте регулярно для получения последнего статуса.' : 'Маълумоти пайгирӣ ҳар 6 соат нав мешавад. Барои гирифтани охирин вазъият мунтазам санҷед.'}
+              {t.updatesDesc}
             </Text>
           </View>
         </View>
@@ -465,40 +487,100 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: "right",
   },
+  codBanner: {
+    backgroundColor: "#fef3c7",
+    borderColor: "#f59e0b",
+    borderWidth: 2,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    shadowColor: "#f59e0b",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  codBannerContent: {
+    flex: 1,
+  },
+  codBannerTitle: {
+    fontSize: 14,
+    fontWeight: "800" as const,
+    color: "#78350f",
+    marginBottom: 6,
+    letterSpacing: 0.5,
+    textTransform: "uppercase" as const,
+  },
+  codBannerAmount: {
+    fontSize: 13,
+    fontWeight: "600" as const,
+    color: "#92400e",
+  },
+  codBannerAmountValue: {
+    fontSize: 18,
+    fontWeight: "900" as const,
+    color: "#78350f",
+  },
   timeline: {
     paddingTop: 8,
   },
   timelineItem: {
     flexDirection: "row",
-    paddingBottom: 20,
+    paddingBottom: 24,
   },
   timelineItemLast: {
     paddingBottom: 0,
   },
+  timelineLeftColumn: {
+    alignItems: "center",
+    marginRight: 16,
+  },
   timelineDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: "#e2e8f0",
-    marginRight: 12,
-    marginTop: 4,
-    position: "relative" as const,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 3,
+    borderColor: "#ffffff",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   timelineDotCompleted: {
     backgroundColor: "#0284c7",
   },
+  timelineLine: {
+    width: 3,
+    flex: 1,
+    backgroundColor: "#e2e8f0",
+    marginVertical: 4,
+  },
   timelineContent: {
     flex: 1,
+    paddingTop: 2,
   },
   timelineTitle: {
-    fontSize: 15,
-    fontWeight: "600" as const,
+    fontSize: 16,
+    fontWeight: "700" as const,
     color: "#0f172a",
-    marginBottom: 2,
+    marginBottom: 4,
   },
   timelineDate: {
     fontSize: 13,
     color: "#64748b",
+    marginBottom: 6,
+  },
+  timelineDescription: {
+    fontSize: 13,
+    color: "#94a3b8",
+    lineHeight: 18,
   },
   tipsSection: {
     padding: 16,

@@ -8,6 +8,8 @@ import {
   Package,
   CheckCircle,
   MessageCircle,
+  Tag,
+  X,
 } from "lucide-react-native";
 import React, { useState } from "react";
 import {
@@ -19,6 +21,7 @@ import {
   Alert,
   Linking,
   useColorScheme,
+  Modal,
 } from "react-native";
 import * as Clipboard from "expo-clipboard";
 
@@ -30,8 +33,10 @@ import {
   type TransportType,
 } from "@/mocks/cargo-data";
 import { Colors } from "@/constants/colors";
-import { EXCHANGE_RATE_USD_TO_TJS } from "@/constants/translations";
 import { useLanguage } from "@/contexts/LanguageContext";
+
+// Financial Dashboard Exchange Rate
+const EXCHANGE_RATE = 11.25;
 
 type Tab = "rates" | "warehouses" | "reviews" | "tracking";
 
@@ -42,11 +47,43 @@ export default function CargoDetailScreen() {
   const [currency, setCurrency] = useState<'USD' | 'TJS'>('USD');
   const { id } = useLocalSearchParams<{ id: string }>();
   const [activeTab, setActiveTab] = useState<Tab>("rates");
+  const [showMarkingModal, setShowMarkingModal] = useState(false);
+  const [generatedMarkingId, setGeneratedMarkingId] = useState<string>("");
 
   const cargo = cargoCompanies.find((c) => c.id === id);
   const cargoWarehouses = warehouses.filter((w) => w.cargoId === id);
   const cargoRates = priceRates.filter((r) => r.cargoId === id);
   const cargoReviews = reviews.filter((r) => r.cargoId === id);
+
+  // Generate unique Cargo Marking ID
+  const generateMarkingId = () => {
+    const random4Digits = Math.floor(1000 + Math.random() * 9000);
+    const userId = "USER123"; // In real app, get from auth context
+    return `DROP-${id}-${userId}-${random4Digits}`;
+  };
+
+  const handleGetMarkingId = () => {
+    const markingId = generateMarkingId();
+    setGeneratedMarkingId(markingId);
+    setShowMarkingModal(true);
+  };
+
+  const copyMarkingToClipboard = async () => {
+    if (cargoWarehouses.length === 0) {
+      Alert.alert(t.error, "No warehouse address available");
+      return;
+    }
+
+    const mainWarehouse = cargoWarehouses[0];
+    const addressToUse = mainWarehouse.chineseAddress || mainWarehouse.address;
+    const textToCopy = `🏭 ${t.warehouseAddress} (收货地址):\n${mainWarehouse.name}\n${addressToUse}\n${mainWarehouse.city}\n📞 ${mainWarehouse.phone}\n\n📦 ${t.yourMarkingId} (您的标记号):\n${generatedMarkingId}\n\n⚠️ ${t.markingIdInstructions}\n重要：在1688/淘宝/速卖通下单时，请在包裹上写上此标记号`;
+
+    await Clipboard.setStringAsync(textToCopy);
+    Alert.alert(
+      `✅ ${t.copied}`,
+      ""
+    );
+  };
 
   if (!cargo) {
     return (
@@ -60,7 +97,7 @@ export default function CargoDetailScreen() {
     if (currency === 'USD') {
       return `$${usdPrice.toFixed(2)}`;
     }
-    return `${(usdPrice * EXCHANGE_RATE_USD_TO_TJS).toFixed(0)} TJS`;
+    return `${(usdPrice * EXCHANGE_RATE).toFixed(2)} TJS`;
   };
 
   const copyToClipboard = async (text: string, label: string) => {
@@ -132,12 +169,12 @@ export default function CargoDetailScreen() {
               <Text style={[styles.ratePrice, { color: theme.primary }]}>{convertPrice(rate.pricePerKg)}/kg</Text>
               {currency === 'USD' && (
                 <Text style={[styles.ratePriceAlt, { color: theme.secondaryText }]}>
-                  {(rate.pricePerKg * EXCHANGE_RATE_USD_TO_TJS).toFixed(0)} TJS
+                  ≈ {(rate.pricePerKg * EXCHANGE_RATE).toFixed(2)} TJS
                 </Text>
               )}
               {currency === 'TJS' && (
                 <Text style={[styles.ratePriceAlt, { color: theme.secondaryText }]}>
-                  ${rate.pricePerKg.toFixed(2)}
+                  ≈ ${rate.pricePerKg.toFixed(2)}
                 </Text>
               )}
             </View>
@@ -320,6 +357,15 @@ export default function CargoDetailScreen() {
         </View>
       </View>
 
+      {/* Prominent Marking Button */}
+      <TouchableOpacity
+        style={[styles.markingButton, { backgroundColor: theme.warning }]}
+        onPress={handleGetMarkingId}
+      >
+        <Tag color="#ffffff" size={22} />
+        <Text style={styles.markingButtonText}>📦 {t.getShippingAddress}</Text>
+      </TouchableOpacity>
+
       <View style={[styles.statsBar, { backgroundColor: theme.cardBackground, borderBottomColor: theme.border }]}>
         <View style={styles.statItem}>
           <Text style={[styles.statValue, { color: theme.primary }]}>{convertPrice(cargo.pricePerKg)}/kg</Text>
@@ -434,6 +480,108 @@ export default function CargoDetailScreen() {
         {activeTab === "reviews" && renderReviewsTab()}
         {activeTab === "tracking" && renderTrackingTab()}
       </ScrollView>
+
+      {/* Marking Modal */}
+      <Modal
+        visible={showMarkingModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowMarkingModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContainer, { backgroundColor: theme.cardBackground }]}>
+            <View style={styles.modalHeader}>
+              <Text style={[styles.modalTitle, { color: theme.text }]}>
+                📦 Shipping Address & Marking
+              </Text>
+              <TouchableOpacity
+                onPress={() => setShowMarkingModal(false)}
+                style={[styles.closeButton, { backgroundColor: theme.searchBackground }]}
+              >
+                <X color={theme.secondaryText} size={20} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
+              {cargoWarehouses.length > 0 && (
+                <>
+                  <View style={[styles.modalSection, { backgroundColor: theme.searchBackground }]}>
+                    <Text style={[styles.modalSectionTitle, { color: theme.text }]}>
+                      🏭 {t.warehouseAddress} (收货地址)
+                    </Text>
+                    <Text style={[styles.warehouseAddressText, { color: theme.text }]}>
+                      {cargoWarehouses[0].name}
+                    </Text>
+                    <Text style={[styles.warehouseAddressText, { color: theme.secondaryText }]}>
+                      {cargoWarehouses[0].chineseAddress || cargoWarehouses[0].address}
+                    </Text>
+                    {cargoWarehouses[0].chineseAddress && (
+                      <Text style={[styles.warehouseAddressText, { color: theme.secondaryText, fontSize: 13, marginTop: 4 }]}>
+                        {cargoWarehouses[0].address}
+                      </Text>
+                    )}
+                    <Text style={[styles.warehouseAddressText, { color: theme.secondaryText }]}>
+                      {cargoWarehouses[0].city}
+                    </Text>
+                    <Text style={[styles.warehouseAddressText, { color: theme.primary }]}>
+                      📞 {cargoWarehouses[0].phone}
+                    </Text>
+                  </View>
+
+                  <View style={[styles.modalSection, { backgroundColor: theme.warning + '15', borderColor: theme.warning, borderWidth: 2 }]}>
+                    <Text style={[styles.modalSectionTitle, { color: theme.text }]}>
+                      📦 {t.yourMarkingId} (您的标记号)
+                    </Text>
+                    <Text style={[styles.markingIdText, { color: theme.warning }]}>
+                      {generatedMarkingId}
+                    </Text>
+                    <Text style={[styles.markingIdDescription, { color: theme.secondaryText }]}>
+                      ⚠️ {t.markingIdInstructions}
+                    </Text>
+                    <Text style={[styles.markingIdDescription, { color: theme.secondaryText, fontSize: 12, marginTop: 4 }]}>
+                      在1688/淘宝/速卖通下单时，请在包裹上和订单备注中写上此标记号
+                    </Text>
+                  </View>
+
+                  <TouchableOpacity
+                    style={[styles.copyFullButton, { backgroundColor: theme.primary }]}
+                    onPress={copyMarkingToClipboard}
+                  >
+                    <Copy color="#ffffff" size={20} />
+                    <Text style={styles.copyFullButtonText}>
+                      {t.copyAddressAndMarking}
+                    </Text>
+                  </TouchableOpacity>
+
+                  <View style={[styles.instructionBox, { backgroundColor: theme.searchBackground }]}>
+                    <Text style={[styles.instructionTitle, { color: theme.text }]}>
+                      💡 {t.howToUse}
+                    </Text>
+                    <Text style={[styles.instructionText, { color: theme.secondaryText }]}>
+                      1. {t.copyAddressStep}
+                    </Text>
+                    <Text style={[styles.instructionText, { color: theme.secondaryText }]}>
+                      2. {t.pasteAddressStep}
+                    </Text>
+                    <Text style={[styles.instructionText, { color: theme.secondaryText }]}>
+                      3. {t.writeMarkingStep}
+                    </Text>
+                    <Text style={[styles.instructionText, { color: theme.secondaryText }]}>
+                      4. {t.identifyPackageStep}
+                    </Text>
+                  </View>
+                </>
+              )}
+
+              {cargoWarehouses.length === 0 && (
+                <Text style={[styles.noWarehouseText, { color: theme.secondaryText }]}>
+                  No warehouse address available for this cargo company.
+                </Text>
+              )}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -850,5 +998,130 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: "center",
     marginTop: 32,
+  },
+  markingButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    marginHorizontal: 16,
+    marginVertical: 12,
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  markingButtonText: {
+    fontSize: 16,
+    fontWeight: "700" as const,
+    color: "#ffffff",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    justifyContent: "flex-end",
+  },
+  modalContainer: {
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    maxHeight: "90%",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 10,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 16,
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: "700" as const,
+  },
+  closeButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  modalContent: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
+  modalSection: {
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 16,
+  },
+  modalSectionTitle: {
+    fontSize: 14,
+    fontWeight: "700" as const,
+    marginBottom: 12,
+    textTransform: "uppercase" as const,
+    letterSpacing: 1,
+  },
+  warehouseAddressText: {
+    fontSize: 15,
+    lineHeight: 22,
+    marginBottom: 4,
+  },
+  markingIdText: {
+    fontSize: 28,
+    fontWeight: "900" as const,
+    letterSpacing: 2,
+    textAlign: "center",
+    marginVertical: 12,
+    fontFamily: "monospace",
+  },
+  markingIdDescription: {
+    fontSize: 13,
+    lineHeight: 18,
+    textAlign: "center",
+    marginTop: 8,
+  },
+  copyFullButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    paddingVertical: 16,
+    borderRadius: 12,
+    marginBottom: 16,
+  },
+  copyFullButtonText: {
+    fontSize: 16,
+    fontWeight: "700" as const,
+    color: "#ffffff",
+  },
+  instructionBox: {
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 20,
+  },
+  instructionTitle: {
+    fontSize: 16,
+    fontWeight: "700" as const,
+    marginBottom: 12,
+  },
+  instructionText: {
+    fontSize: 14,
+    lineHeight: 22,
+    marginBottom: 8,
+  },
+  noWarehouseText: {
+    fontSize: 15,
+    textAlign: "center",
+    marginTop: 40,
+    marginBottom: 40,
   },
 });

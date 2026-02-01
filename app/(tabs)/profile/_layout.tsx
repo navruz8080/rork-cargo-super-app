@@ -1,6 +1,9 @@
 import { Stack } from "expo-router";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function ProfileLayout() {
+  const { t } = useLanguage();
+  
   return (
     <Stack
       screenOptions={{
@@ -16,7 +19,32 @@ export default function ProfileLayout() {
       <Stack.Screen
         name="index"
         options={{
-          title: "Profile",
+          title: t.profile,
+        }}
+      />
+      <Stack.Screen
+        name="edit"
+        options={{
+          title: t.editProfile,
+          presentation: "modal",
+        }}
+      />
+      <Stack.Screen
+        name="create-shipment"
+        options={{
+          title: t.createShipment,
+        }}
+      />
+      <Stack.Screen
+        name="help"
+        options={{
+          title: t.help,
+        }}
+      />
+      <Stack.Screen
+        name="register-company"
+        options={{
+          title: t.registerYourCompany,
         }}
       />
     </Stack>

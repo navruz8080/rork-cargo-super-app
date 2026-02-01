@@ -14,8 +14,10 @@ import {
 
 import { cargoCompanies, type TransportType } from "@/mocks/cargo-data";
 import { Colors } from "@/constants/colors";
-import { EXCHANGE_RATE_USD_TO_TJS } from "@/constants/translations";
 import { useLanguage } from "@/contexts/LanguageContext";
+
+// Financial Dashboard Exchange Rate
+const EXCHANGE_RATE = 11.25;
 
 export default function HomeScreen() {
   const colorScheme = useColorScheme();
@@ -53,11 +55,14 @@ export default function HomeScreen() {
     [rankedCompanies]
   );
 
-  const convertPrice = (usdPrice: number): string => {
+  const convertPrice = (usdPrice: number): { primary: string; secondary: string } => {
+    const usd = `$${usdPrice.toFixed(2)}`;
+    const tjs = `≈ ${(usdPrice * EXCHANGE_RATE).toFixed(2)} TJS`;
+    
     if (currency === 'USD') {
-      return `$${usdPrice.toFixed(2)}`;
+      return { primary: usd, secondary: tjs };
     }
-    return `${(usdPrice * EXCHANGE_RATE_USD_TO_TJS).toFixed(0)} TJS`;
+    return { primary: `${(usdPrice * EXCHANGE_RATE).toFixed(2)} TJS`, secondary: usd };
   };
 
   const getPriceChange = (): 'stable' | 'up' | 'down' => {
@@ -175,7 +180,12 @@ export default function HomeScreen() {
               </View>
               <View style={[styles.metricsRow, { backgroundColor: theme.tableHeader }]}>
                 <View style={styles.metric}>
-                  <Text style={[styles.metricValue, { color: theme.primary }]}>{convertPrice(company.pricePerKg)}/kg</Text>
+                  <Text style={[styles.metricValue, { color: theme.primary }]} numberOfLines={1} adjustsFontSizeToFit>
+                    {convertPrice(company.pricePerKg).primary}
+                  </Text>
+                  <Text style={[styles.metricSecondary, { color: theme.secondaryText }]} numberOfLines={1} adjustsFontSizeToFit>
+                    {convertPrice(company.pricePerKg).secondary}
+                  </Text>
                   <Text style={[styles.metricLabel, { color: theme.secondaryText }]}>{t.price}</Text>
                 </View>
                 <View style={[styles.metricDivider, { backgroundColor: theme.border }]} />
@@ -197,14 +207,23 @@ export default function HomeScreen() {
           <Text style={[styles.sectionTitle, { color: theme.text }]}>{t.allCompanies} ({filteredCompanies.length})</Text>
           
           <View style={[styles.tableHeader, { backgroundColor: theme.tableHeader, borderBottomColor: theme.tableBorder }]}>
-            <Text style={[styles.tableHeaderText, { color: theme.secondaryText, width: 40 }]}>#{t.rank}</Text>
-            <Text style={[styles.tableHeaderText, { color: theme.secondaryText, flex: 1 }]}>{t.cargo}</Text>
-            <Text style={[styles.tableHeaderText, { color: theme.secondaryText, width: 100, textAlign: 'right' }]}>{t.price}</Text>
-            <Text style={[styles.tableHeaderText, { color: theme.secondaryText, width: 60, textAlign: 'center' }]}>{t.delivery}</Text>
+            <Text style={[styles.tableHeaderText, { color: theme.secondaryText }, styles.rankColumn]} numberOfLines={1} adjustsFontSizeToFit>
+              #
+            </Text>
+            <Text style={[styles.tableHeaderText, { color: theme.secondaryText }, styles.companyColumn]} numberOfLines={1} adjustsFontSizeToFit>
+              {t.cargo}
+            </Text>
+            <Text style={[styles.tableHeaderText, { color: theme.secondaryText }, styles.priceColumn]} numberOfLines={1} adjustsFontSizeToFit>
+              {t.price}
+            </Text>
+            <Text style={[styles.tableHeaderText, { color: theme.secondaryText }, styles.deliveryColumn]} numberOfLines={1} adjustsFontSizeToFit>
+              {t.delivery}
+            </Text>
           </View>
 
           {filteredCompanies.map((company, index) => {
             const priceChange = getPriceChange();
+            const prices = convertPrice(company.pricePerKg);
             return (
               <Pressable
                 key={company.id}
@@ -212,7 +231,9 @@ export default function HomeScreen() {
                 onPress={() => router.push(`/(tabs)/(home)/cargo/${company.id}`)}
               >
                 <View style={styles.rankCell}>
-                  <Text style={[styles.rankText, { color: theme.secondaryText }]}>#{index + 1}</Text>
+                  <Text style={[styles.rankText, { color: theme.secondaryText }]} numberOfLines={1} adjustsFontSizeToFit>
+                    {index + 1}
+                  </Text>
                 </View>
                 <View style={styles.companyCell}>
                   <View style={[styles.logoTable, { backgroundColor: theme.searchBackground }]}>
@@ -220,16 +241,25 @@ export default function HomeScreen() {
                   </View>
                   <View style={styles.companyInfoTable}>
                     <View style={styles.nameRowTable}>
-                      <Text style={[styles.companyNameTable, { color: theme.text }]} numberOfLines={1}>{company.name}</Text>
+                      <Text style={[styles.companyNameTable, { color: theme.text }]} numberOfLines={1} adjustsFontSizeToFit>
+                        {company.name}
+                      </Text>
                       {company.isVerified && (
                         <Text style={[styles.verifiedBadgeTable, { backgroundColor: theme.verified }]}>✓</Text>
                       )}
                     </View>
-                    <Text style={[styles.ratingTable, { color: theme.secondaryText }]} numberOfLines={1}>⭐ {company.rating} · {company.totalShipments.toLocaleString()}</Text>
+                    <Text style={[styles.ratingTable, { color: theme.secondaryText }]} numberOfLines={1}>
+                      ⭐ {company.rating} · {company.totalShipments.toLocaleString()}
+                    </Text>
                   </View>
                 </View>
                 <View style={styles.priceCell}>
-                  <Text style={[styles.priceCellText, { color: theme.text }]}>{convertPrice(company.pricePerKg)}</Text>
+                  <Text style={[styles.priceCellText, { color: theme.text }]} numberOfLines={1} adjustsFontSizeToFit>
+                    {prices.primary}
+                  </Text>
+                  <Text style={[styles.priceCellSecondary, { color: theme.secondaryText }]} numberOfLines={1} adjustsFontSizeToFit>
+                    {prices.secondary}
+                  </Text>
                   {priceChange === 'stable' && (
                     <View style={styles.priceChangeRow}>
                       <Minus size={10} color={theme.secondaryText} />
@@ -250,7 +280,9 @@ export default function HomeScreen() {
                   )}
                 </View>
                 <View style={styles.deliveryCell}>
-                  <Text style={[styles.deliveryCellText, { color: theme.primary }]}>{company.avgDeliveryDays}d</Text>
+                  <Text style={[styles.deliveryCellText, { color: theme.primary }]} numberOfLines={1} adjustsFontSizeToFit>
+                    {company.avgDeliveryDays}d
+                  </Text>
                 </View>
               </Pressable>
             );
@@ -411,8 +443,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   metricValue: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "700" as const,
+    marginBottom: 2,
+  },
+  metricSecondary: {
+    fontSize: 10,
     marginBottom: 2,
   },
   metricLabel: {
@@ -424,33 +460,51 @@ const styles = StyleSheet.create({
   },
   tableHeader: {
     flexDirection: "row",
-    paddingVertical: 10,
+    paddingVertical: 12,
     paddingHorizontal: 12,
     borderBottomWidth: 2,
-    marginBottom: 4,
+    marginBottom: 0,
     borderRadius: 8,
+    alignItems: "center",
   },
   tableHeaderText: {
     fontSize: 11,
     fontWeight: "700" as const,
     textTransform: "uppercase" as const,
   },
+  rankColumn: {
+    flex: 0.5,
+    textAlign: "center",
+  },
+  companyColumn: {
+    flex: 2.5,
+  },
+  priceColumn: {
+    flex: 1.5,
+    textAlign: "right",
+  },
+  deliveryColumn: {
+    flex: 1.5,
+    textAlign: "center",
+  },
   tableRow: {
     flexDirection: "row",
-    paddingVertical: 12,
+    paddingVertical: 10,
     paddingHorizontal: 12,
     alignItems: "center",
     borderBottomWidth: 1,
   },
   rankCell: {
-    width: 40,
+    flex: 0.5,
+    alignItems: "center",
+    justifyContent: "center",
   },
   rankText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "600" as const,
   },
   companyCell: {
-    flex: 1,
+    flex: 2.5,
     flexDirection: "row",
     alignItems: "center",
   },
@@ -492,12 +546,17 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   priceCell: {
-    width: 100,
+    flex: 1.5,
     alignItems: "flex-end",
+    paddingRight: 8,
   },
   priceCellText: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: "700" as const,
+  },
+  priceCellSecondary: {
+    fontSize: 9,
+    marginTop: 1,
   },
   priceChangeText: {
     fontSize: 10,
@@ -510,11 +569,12 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   deliveryCell: {
-    width: 60,
+    flex: 1.5,
     alignItems: "center",
+    justifyContent: "center",
   },
   deliveryCellText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "700" as const,
   },
   bottomPadding: {
