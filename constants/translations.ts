@@ -122,6 +122,16 @@ export const translations = {
     total: 'Total',
     viewAllShipments: 'View All Shipments',
     
+    // Favorites
+    favorites: 'Favorites',
+    myFavorites: 'My Favorites',
+    noFavorites: 'No favorites yet',
+    noFavoritesHint: 'Add companies to favorites by tapping the star icon',
+    browseCompanies: 'Browse Companies',
+    quickComparison: 'Quick Comparison',
+    avgPrice: 'Avg Price',
+    viewFavorites: 'View Favorites',
+    
     helpSupport: 'Help & Support',
     selectLanguage: 'Select Language',
     forBusiness: 'For Business',
@@ -350,6 +360,16 @@ export const translations = {
     total: 'Всего',
     viewAllShipments: 'Просмотреть все отправления',
     
+    // Favorites
+    favorites: 'Избранное',
+    myFavorites: 'Мои избранные',
+    noFavorites: 'Пока нет избранных',
+    noFavoritesHint: 'Добавляйте компании в избранное, нажав на звездочку',
+    browseCompanies: 'Обзор компаний',
+    quickComparison: 'Быстрое сравнение',
+    avgPrice: 'Средняя цена',
+    viewFavorites: 'Избранное',
+    
     helpSupport: 'Помощь и поддержка',
     selectLanguage: 'Выберите язык',
     forBusiness: 'Для бизнеса',
@@ -577,6 +597,16 @@ export const translations = {
     seeAll: 'Ҳама',
     total: 'Ҷамъ',
     viewAllShipments: 'Дидани ҳамаи фиристодаҳо',
+    
+    // Favorites
+    favorites: 'Дӯстдошта',
+    myFavorites: 'Дӯстдоштаҳои ман',
+    noFavorites: 'Ҳанӯз дӯстдошта нест',
+    noFavoritesHint: 'Ширкатҳоро ба дӯстдошта илова кунед',
+    browseCompanies: 'Тамошои ширкатҳо',
+    quickComparison: 'Муқоисаи зуд',
+    avgPrice: 'Нархи миёна',
+    viewFavorites: 'Дӯстдошта',
     
     helpSupport: 'Кӯмак ва дастгирӣ',
     selectLanguage: 'Забонро интихоб кунед',

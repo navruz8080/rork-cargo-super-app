@@ -29,6 +29,12 @@ export default function ProfileLayout() {
         }}
       />
       <Stack.Screen
+        name="favorites"
+        options={{
+          title: t.favorites,
+        }}
+      />
+      <Stack.Screen
         name="edit"
         options={{
           title: t.editProfile,

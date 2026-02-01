@@ -1,4 +1,4 @@
-import { Package, Mail, Phone, MapPin, Settings, Languages, Building2, LogOut, Camera } from "lucide-react-native";
+import { Package, Mail, Phone, MapPin, Settings, Languages, Building2, LogOut, Camera, Star } from "lucide-react-native";
 import React, { useState } from "react";
 import {
   StyleSheet,
@@ -262,6 +262,14 @@ export default function ProfileScreen() {
           >
             <Package color="#0284c7" size={20} />
             <Text style={styles.viewAllShipmentsText}>{t.viewAllShipments}</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.viewAllShipmentsButton, { backgroundColor: "#fef3c7", borderColor: "#f59e0b" }]}
+            onPress={() => router.push('/profile/favorites')}
+          >
+            <Star color="#f59e0b" size={20} fill="#f59e0b" />
+            <Text style={[styles.viewAllShipmentsText, { color: "#f59e0b" }]}>{t.viewFavorites}</Text>
           </TouchableOpacity>
         </View>
 

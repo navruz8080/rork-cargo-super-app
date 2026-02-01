@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { TrendingUp, Search, ArrowUp, ArrowDown, Minus } from "lucide-react-native";
+import { TrendingUp, Search, ArrowUp, ArrowDown, Minus, Star } from "lucide-react-native";
 import React, { useState, useMemo } from "react";
 import {
   StyleSheet,
@@ -15,6 +15,7 @@ import {
 import { cargoCompanies, type TransportType } from "@/mocks/cargo-data";
 import { Colors } from "@/constants/colors";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useFavorites } from "@/contexts/FavoritesContext";
 
 // Financial Dashboard Exchange Rate
 const EXCHANGE_RATE = 11.25;
@@ -23,6 +24,7 @@ export default function HomeScreen() {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme ?? 'light'];
   const { t } = useLanguage();
+  const { isFavorite, toggleFavorite } = useFavorites();
   const [currency, setCurrency] = useState<'USD' | 'TJS'>('USD');
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedFilters, setSelectedFilters] = useState<TransportType[]>([]);
@@ -156,50 +158,61 @@ export default function HomeScreen() {
             <Text style={[styles.sectionTitle, { color: theme.text }]}>{t.trending}</Text>
           </View>
           {trendingCompanies.map((company) => (
-            <Pressable
-              key={company.id}
-              style={[styles.trendingCard, { backgroundColor: theme.cardBackground, borderColor: theme.primary }]}
-              onPress={() => router.push(`/(tabs)/(home)/cargo/${company.id}`)}
-            >
-              <View style={styles.cardHeader}>
-                <View style={[styles.logoContainer, { backgroundColor: theme.searchBackground }]}>
-                  <Text style={styles.logo}>{company.logo}</Text>
-                </View>
-                <View style={styles.cardInfo}>
-                  <View style={styles.nameRow}>
-                    <Text style={[styles.companyName, { color: theme.text }]}>{company.name}</Text>
-                    {company.isVerified && (
-                      <Text style={[styles.verifiedBadge, { backgroundColor: theme.verified }]}>✓</Text>
-                    )}
+            <View key={company.id} style={styles.trendingCardWrapper}>
+              <Pressable
+                style={[styles.trendingCard, { backgroundColor: theme.cardBackground, borderColor: theme.primary }]}
+                onPress={() => router.push(`/(tabs)/(home)/cargo/${company.id}`)}
+              >
+                <View style={styles.cardHeader}>
+                  <View style={[styles.logoContainer, { backgroundColor: theme.searchBackground }]}>
+                    <Text style={styles.logo}>{company.logo}</Text>
                   </View>
-                  <View style={styles.ratingRow}>
-                    <Text style={[styles.rating, { color: theme.text }]}>⭐ {company.rating}</Text>
-                    <Text style={[styles.reviewCount, { color: theme.secondaryText }]}>({company.reviewCount} {t.reviews.toLowerCase()})</Text>
+                  <View style={styles.cardInfo}>
+                    <View style={styles.nameRow}>
+                      <Text style={[styles.companyName, { color: theme.text }]}>{company.name}</Text>
+                      {company.isVerified && (
+                        <Text style={[styles.verifiedBadge, { backgroundColor: theme.verified }]}>✓</Text>
+                      )}
+                    </View>
+                    <View style={styles.ratingRow}>
+                      <Text style={[styles.rating, { color: theme.text }]}>⭐ {company.rating}</Text>
+                      <Text style={[styles.reviewCount, { color: theme.secondaryText }]}>({company.reviewCount} {t.reviews.toLowerCase()})</Text>
+                    </View>
                   </View>
                 </View>
-              </View>
-              <View style={[styles.metricsRow, { backgroundColor: theme.tableHeader }]}>
-                <View style={styles.metric}>
-                  <Text style={[styles.metricValue, { color: theme.primary }]} numberOfLines={1} adjustsFontSizeToFit>
-                    {convertPrice(company.pricePerKg).primary}
-                  </Text>
-                  <Text style={[styles.metricSecondary, { color: theme.secondaryText }]} numberOfLines={1} adjustsFontSizeToFit>
-                    {convertPrice(company.pricePerKg).secondary}
-                  </Text>
-                  <Text style={[styles.metricLabel, { color: theme.secondaryText }]}>{t.price}</Text>
+                <View style={[styles.metricsRow, { backgroundColor: theme.tableHeader }]}>
+                  <View style={styles.metric}>
+                    <Text style={[styles.metricValue, { color: theme.primary }]} numberOfLines={1} adjustsFontSizeToFit>
+                      {convertPrice(company.pricePerKg).primary}
+                    </Text>
+                    <Text style={[styles.metricSecondary, { color: theme.secondaryText }]} numberOfLines={1} adjustsFontSizeToFit>
+                      {convertPrice(company.pricePerKg).secondary}
+                    </Text>
+                    <Text style={[styles.metricLabel, { color: theme.secondaryText }]}>{t.price}</Text>
+                  </View>
+                  <View style={[styles.metricDivider, { backgroundColor: theme.border }]} />
+                  <View style={styles.metric}>
+                    <Text style={[styles.metricValue, { color: theme.primary }]}>{company.avgDeliveryDays}d</Text>
+                    <Text style={[styles.metricLabel, { color: theme.secondaryText }]}>{t.delivery}</Text>
+                  </View>
+                  <View style={[styles.metricDivider, { backgroundColor: theme.border }]} />
+                  <View style={styles.metric}>
+                    <Text style={[styles.metricValue, { color: theme.primary }]}>{company.reliabilityScore}%</Text>
+                    <Text style={[styles.metricLabel, { color: theme.secondaryText }]}>{t.reliability}</Text>
+                  </View>
                 </View>
-                <View style={[styles.metricDivider, { backgroundColor: theme.border }]} />
-                <View style={styles.metric}>
-                  <Text style={[styles.metricValue, { color: theme.primary }]}>{company.avgDeliveryDays}d</Text>
-                  <Text style={[styles.metricLabel, { color: theme.secondaryText }]}>{t.delivery}</Text>
-                </View>
-                <View style={[styles.metricDivider, { backgroundColor: theme.border }]} />
-                <View style={styles.metric}>
-                  <Text style={[styles.metricValue, { color: theme.primary }]}>{company.reliabilityScore}%</Text>
-                  <Text style={[styles.metricLabel, { color: theme.secondaryText }]}>{t.reliability}</Text>
-                </View>
-              </View>
-            </Pressable>
+              </Pressable>
+              <TouchableOpacity
+                style={[styles.favoriteButton, { backgroundColor: isFavorite(company.id) ? theme.warning : theme.background }]}
+                onPress={() => toggleFavorite(company.id)}
+              >
+                <Star
+                  color={isFavorite(company.id) ? "#ffffff" : theme.secondaryText}
+                  size={20}
+                  fill={isFavorite(company.id) ? "#ffffff" : "transparent"}
+                />
+              </TouchableOpacity>
+            </View>
           ))}
         </View>
 
@@ -377,6 +390,10 @@ const styles = StyleSheet.create({
     fontWeight: "700" as const,
     marginBottom: 16,
   },
+  trendingCardWrapper: {
+    position: "relative",
+    marginBottom: 16,
+  },
   trendingCard: {
     borderRadius: 12,
     padding: 16,
@@ -457,6 +474,23 @@ const styles = StyleSheet.create({
   metricDivider: {
     width: 1,
     marginHorizontal: 8,
+  },
+  favoriteButton: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+    borderColor: "#e2e8f0",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   tableHeader: {
     flexDirection: "row",
