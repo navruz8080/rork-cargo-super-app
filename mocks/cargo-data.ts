@@ -42,11 +42,14 @@ export interface Review {
   cargoId: string;
   userId: string;
   userName: string;
+  userAvatar?: string;
   rating: number;
   comment: string;
   date: string;
   isVerified: boolean;
   trackingNumber: string;
+  photos?: string[]; // Array of photo URIs
+  helpful?: number; // Number of users who found this review helpful
 }
 
 export interface Shipment {
@@ -314,66 +317,82 @@ export const reviews: Review[] = [
     cargoId: '1',
     userId: 'u1',
     userName: 'Фаррух М.',
+    userAvatar: '👨',
     rating: 5,
     comment: 'Отличный сервис! Посылка прибыла за 11 дней, хорошо упакована, никаких проблем на таможне. Буду пользоваться ещё!',
     date: '2024-01-15',
     isVerified: true,
     trackingNumber: 'EA1234567890TJ',
+    photos: ['https://picsum.photos/400/300?random=1', 'https://picsum.photos/400/300?random=2'],
+    helpful: 24,
   },
   {
     id: 'rev2',
     cargoId: '1',
     userId: 'u2',
     userName: 'Зарина К.',
+    userAvatar: '👩',
     rating: 4,
-    comment: 'Хорошее время доставки, цены адекватные. Служба поддержки могла бы отвечать быстрее, но в целом доволен.',
+    comment: 'Хорошее время доставки, цены адекватные. Служба поддержки могла бы отвечать быстрее, но в целом довольна.',
     date: '2024-01-10',
     isVerified: true,
     trackingNumber: 'EA9876543210TJ',
+    helpful: 18,
   },
   {
     id: 'rev3',
     cargoId: '3',
     userId: 'u3',
     userName: 'Алишер С.',
+    userAvatar: '👨‍💼',
     rating: 5,
     comment: 'Лучшая карго компания! Быстрая, надёжная и профессиональная. Отслеживание работает отлично. Очень рекомендую!',
     date: '2024-01-20',
     isVerified: true,
     trackingNumber: 'DE5555666677TJ',
+    photos: ['https://picsum.photos/400/300?random=3'],
+    helpful: 42,
   },
   {
     id: 'rev4',
     cargoId: '2',
     userId: 'u4',
     userName: 'Дилшод Р.',
+    userAvatar: '👨‍🔧',
     rating: 4,
     comment: 'Недорого и качественно. Доставка заняла 19 дней, что в пределах обещанного срока. Упаковка надёжная.',
     date: '2024-01-18',
     isVerified: true,
     trackingNumber: 'SR2024010088TJ',
+    photos: ['https://picsum.photos/400/300?random=4', 'https://picsum.photos/400/300?random=5', 'https://picsum.photos/400/300?random=6'],
+    helpful: 15,
   },
   {
     id: 'rev5',
     cargoId: '5',
     userId: 'u5',
     userName: 'Нигина Х.',
+    userAvatar: '👩‍💼',
     rating: 5,
     comment: 'Заказывала косметику, всё пришло в целости. Менеджеры помогли с оформлением на складе в Иу. Спасибо!',
     date: '2024-01-22',
     isVerified: true,
     trackingNumber: 'FT2024010120TJ',
+    helpful: 31,
   },
   {
     id: 'rev6',
     cargoId: '3',
     userId: 'u6',
     userName: 'Рустам Т.',
+    userAvatar: '🧑‍💻',
     rating: 5,
     comment: 'Экспресс доставка оправдала ожидания - 9 дней! Дорого, но когда срочно нужно - это лучший вариант.',
     date: '2024-01-12',
     isVerified: true,
     trackingNumber: 'DE2024010055TJ',
+    photos: ['https://picsum.photos/400/300?random=7'],
+    helpful: 28,
   },
 ];
 

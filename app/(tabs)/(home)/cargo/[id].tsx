@@ -1,4 +1,4 @@
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, router } from "expo-router";
 import {
   MapPin,
   Phone,
@@ -11,6 +11,8 @@ import {
   Tag,
   X,
   AlertCircle,
+  ThumbsUp,
+  Edit3,
 } from "lucide-react-native";
 import React, { useState } from "react";
 import {
@@ -23,6 +25,7 @@ import {
   Linking,
   useColorScheme,
   Modal,
+  Image,
 } from "react-native";
 import * as Clipboard from "expo-clipboard";
 
@@ -271,13 +274,22 @@ export default function CargoDetailScreen() {
           <Text style={[styles.ratingBadgeText, { color: theme.text }]}>{cargo.rating}</Text>
         </View>
       </View>
+      
+      <TouchableOpacity
+        style={[styles.writeReviewButton, { backgroundColor: theme.primary }]}
+        onPress={() => router.push({ pathname: '/(tabs)/(home)/cargo/write-review', params: { cargoId: id, cargoName: cargo.name } })}
+      >
+        <Edit3 color="#ffffff" size={20} />
+        <Text style={styles.writeReviewButtonText}>{t.writeReview}</Text>
+      </TouchableOpacity>
+
       {cargoReviews.map((review) => (
         <View key={review.id} style={[styles.reviewCard, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}>
           <View style={styles.reviewHeader}>
             <View style={styles.reviewUser}>
               <View style={[styles.reviewAvatar, { backgroundColor: theme.primary }]}>
                 <Text style={styles.reviewAvatarText}>
-                  {review.userName.charAt(0)}
+                  {review.userAvatar || review.userName.charAt(0)}
                 </Text>
               </View>
               <View>
@@ -296,13 +308,36 @@ export default function CargoDetailScreen() {
             </View>
           </View>
           <Text style={[styles.reviewComment, { color: theme.secondaryText }]}>{review.comment}</Text>
-          <Text style={[styles.reviewTracking, { color: theme.secondaryText }]}>
-            Tracking: {review.trackingNumber}
-          </Text>
+          
+          {review.photos && review.photos.length > 0 && (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.reviewPhotos}>
+              {review.photos.map((photo, index) => (
+                <Image key={index} source={{ uri: photo }} style={styles.reviewPhoto} />
+              ))}
+            </ScrollView>
+          )}
+          
+          <View style={styles.reviewFooter}>
+            <Text style={[styles.reviewTracking, { color: theme.secondaryText }]}>
+              📦 {review.trackingNumber}
+            </Text>
+            {review.helpful && review.helpful > 0 && (
+              <View style={styles.helpfulContainer}>
+                <ThumbsUp color={theme.secondaryText} size={14} />
+                <Text style={[styles.helpfulText, { color: theme.secondaryText }]}>
+                  {review.helpful} {t.helpful}
+                </Text>
+              </View>
+            )}
+          </View>
         </View>
       ))}
       {cargoReviews.length === 0 && (
-        <Text style={[styles.emptyText, { color: theme.secondaryText }]}>No reviews yet</Text>
+        <View style={styles.emptyReviews}>
+          <MessageCircle color={theme.secondaryText} size={48} />
+          <Text style={[styles.emptyText, { color: theme.secondaryText }]}>{t.noReviewsYet}</Text>
+          <Text style={[styles.emptySubtext, { color: theme.secondaryText }]}>{t.beTheFirstToReview}</Text>
+        </View>
       )}
     </View>
   );
@@ -982,9 +1017,57 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     marginBottom: 8,
   },
+  reviewPhotos: {
+    marginVertical: 12,
+    flexDirection: "row",
+  },
+  reviewPhoto: {
+    width: 120,
+    height: 90,
+    borderRadius: 8,
+    marginRight: 8,
+  },
+  reviewFooter: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 8,
+  },
   reviewTracking: {
     fontSize: 12,
     fontStyle: "italic" as const,
+  },
+  helpfulContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  helpfulText: {
+    fontSize: 12,
+  },
+  writeReviewButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    marginBottom: 20,
+  },
+  writeReviewButtonText: {
+    color: "#ffffff",
+    fontSize: 16,
+    fontWeight: "700" as const,
+  },
+  emptyReviews: {
+    alignItems: "center",
+    paddingVertical: 40,
+    gap: 12,
+  },
+  emptySubtext: {
+    fontSize: 13,
+    textAlign: "center",
   },
   trackingInfo: {
     borderRadius: 12,

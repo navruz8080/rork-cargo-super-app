@@ -2,7 +2,7 @@ import { Stack } from "expo-router";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function HomeLayout() {
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   
   const getHomeTitle = () => {
     if (language === 'en') return 'Drop Logistics';
@@ -38,6 +38,13 @@ export default function HomeLayout() {
         name="cargo/[id]"
         options={{
           title: getCargoDetailsTitle(),
+        }}
+      />
+      <Stack.Screen
+        name="cargo/write-review"
+        options={{
+          title: t.writeReview,
+          presentation: "modal",
         }}
       />
     </Stack>
