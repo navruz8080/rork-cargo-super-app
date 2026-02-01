@@ -13,7 +13,7 @@ import { Star, TrendingDown, TrendingUp, Package } from "lucide-react-native";
 import { router } from "expo-router";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useFavorites } from "@/contexts/FavoritesContext";
-import { mockCargoCompanies } from "@/mocks/cargo-data";
+import { cargoCompanies } from "@/mocks/cargo-data";
 import { Colors } from "@/constants/colors";
 
 const EXCHANGE_RATE = 11.25;
@@ -32,7 +32,7 @@ export default function FavoritesScreen() {
   };
 
   const favoriteCompanies = useMemo(() => {
-    return mockCargoCompanies.filter((company) => favorites.includes(company.id));
+    return cargoCompanies.filter((company) => favorites.includes(company.id));
   }, [favorites]);
 
   const comparison = useMemo(() => {
