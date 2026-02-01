@@ -12,7 +12,7 @@ import {
 import { router } from 'expo-router';
 import { Package } from 'lucide-react-native';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { mockCargos } from '@/mocks/cargo-data';
+import { cargoCompanies } from '@/mocks/cargo-data';
 
 export default function CreateShipmentScreen() {
   const { t } = useLanguage();
@@ -42,7 +42,7 @@ export default function CreateShipmentScreen() {
     router.back();
   };
 
-  const selectedCargoData = mockCargos.find(c => c.id === selectedCargo);
+  const selectedCargoData = cargoCompanies.find(c => c.id === selectedCargo);
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
@@ -60,7 +60,7 @@ export default function CreateShipmentScreen() {
           </TouchableOpacity>
           {showCargoList && (
             <View style={styles.cargoList}>
-              {mockCargos.map(cargo => (
+              {cargoCompanies.map(cargo => (
                 <TouchableOpacity
                   key={cargo.id}
                   style={styles.cargoItem}
