@@ -165,6 +165,12 @@ export default function ProfileScreen() {
                 {language === 'en' ? 'EN' : language === 'ru' ? 'РУ' : 'ТҶ'}
               </Text>
             </TouchableOpacity>
+            <TouchableOpacity style={styles.languageButton} onPress={() => router.push('/profile/settings')}>
+              <Settings color="#0284c7" size={18} />
+              <Text style={styles.languageButtonText}>
+                {t.settings}
+              </Text>
+            </TouchableOpacity>
             <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
               <LogOut color="#ef4444" size={18} />
             </TouchableOpacity>

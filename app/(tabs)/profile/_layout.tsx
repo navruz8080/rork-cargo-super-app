@@ -65,6 +65,12 @@ export default function ProfileLayout() {
           title: t.viewHistory,
         }}
       />
+      <Stack.Screen
+        name="settings"
+        options={{
+          title: t.settings,
+        }}
+      />
     </Stack>
   );
 }
