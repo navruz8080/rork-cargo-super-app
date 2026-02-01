@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { TrendingUp, Search, ArrowUp, ArrowDown, Minus, Star, SlidersHorizontal, CheckCircle, X } from "lucide-react-native";
+import { TrendingUp, Search, ArrowUp, ArrowDown, Minus, Star, SlidersHorizontal, CheckCircle, X, Clock } from "lucide-react-native";
 import React, { useState, useMemo } from "react";
 import {
   StyleSheet,
@@ -18,6 +18,7 @@ import { cargoCompanies, type TransportType } from "@/mocks/cargo-data";
 import { Colors } from "@/constants/colors";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useFavorites } from "@/contexts/FavoritesContext";
+import { useViewHistory } from "@/contexts/ViewHistoryContext";
 import { SkeletonCompanyCard, SkeletonTableRow } from "@/components/Skeleton";
 
 // Financial Dashboard Exchange Rate
@@ -31,6 +32,7 @@ export default function HomeScreen() {
   const theme = Colors[colorScheme ?? 'light'];
   const { t } = useLanguage();
   const { isFavorite, toggleFavorite } = useFavorites();
+  const { getRecentViews } = useViewHistory();
   const [currency, setCurrency] = useState<'USD' | 'TJS'>('USD');
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedFilters, setSelectedFilters] = useState<TransportType[]>([]);
@@ -308,6 +310,52 @@ export default function HomeScreen() {
           ))
           )}
         </View>
+
+        {/* Recently Viewed Section */}
+        {getRecentViews(5).length > 0 && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Clock color={theme.primary} size={20} />
+              <Text style={[styles.sectionTitle, { color: theme.text }]}>{t.recentlyViewed}</Text>
+              <TouchableOpacity
+                style={styles.viewAllButton}
+                onPress={() => router.push('/(tabs)/profile/view-history')}
+              >
+                <Text style={[styles.viewAllText, { color: theme.primary }]}>{t.viewAll}</Text>
+              </TouchableOpacity>
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.recentScroll}>
+              {getRecentViews(5).map((item) => {
+                const company = cargoCompanies.find((c) => c.id === item.companyId);
+                if (!company) return null;
+                const prices = convertPrice(company.pricePerKg);
+                return (
+                  <Pressable
+                    key={item.companyId}
+                    style={[styles.recentCard, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}
+                    onPress={() => router.push(`/(tabs)/(home)/cargo/${item.companyId}`)}
+                  >
+                    <View style={[styles.recentLogo, { backgroundColor: theme.searchBackground }]}>
+                      <Text style={styles.recentLogoText}>{company.logo}</Text>
+                    </View>
+                    <Text style={[styles.recentName, { color: theme.text }]} numberOfLines={1}>
+                      {company.name}
+                    </Text>
+                    <Text style={[styles.recentPrice, { color: theme.primary }]} numberOfLines={1}>
+                      {prices.primary}
+                    </Text>
+                    <View style={styles.recentRating}>
+                      <Star color={theme.warning} size={12} fill={theme.warning} />
+                      <Text style={[styles.recentRatingText, { color: theme.secondaryText }]}>
+                        {company.rating}
+                      </Text>
+                    </View>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+          </View>
+        )}
 
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: theme.text }]}>{t.allCompanies} ({filteredCompanies.length})</Text>
@@ -939,5 +987,53 @@ const styles = StyleSheet.create({
   resetButtonText: {
     fontSize: 15,
     fontWeight: "600" as const,
+  },
+  viewAllButton: {
+    marginLeft: "auto",
+  },
+  viewAllText: {
+    fontSize: 14,
+    fontWeight: "600" as const,
+  },
+  recentScroll: {
+    marginTop: 12,
+  },
+  recentCard: {
+    width: 140,
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginRight: 12,
+    alignItems: "center",
+  },
+  recentLogo: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  recentLogoText: {
+    fontSize: 20,
+  },
+  recentName: {
+    fontSize: 13,
+    fontWeight: "600" as const,
+    marginBottom: 4,
+    textAlign: "center",
+  },
+  recentPrice: {
+    fontSize: 14,
+    fontWeight: "700" as const,
+    marginBottom: 4,
+  },
+  recentRating: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  recentRatingText: {
+    fontSize: 12,
   },
 });

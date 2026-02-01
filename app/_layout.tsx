@@ -7,6 +7,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { UserProvider } from "@/contexts/UserContext";
 import { FavoritesProvider } from "@/contexts/FavoritesContext";
+import { ViewHistoryProvider } from "@/contexts/ViewHistoryContext";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -32,9 +33,11 @@ export default function RootLayout() {
       <UserProvider>
         <LanguageProvider>
           <FavoritesProvider>
-            <GestureHandlerRootView>
-              <RootLayoutNav />
-            </GestureHandlerRootView>
+            <ViewHistoryProvider>
+              <GestureHandlerRootView>
+                <RootLayoutNav />
+              </GestureHandlerRootView>
+            </ViewHistoryProvider>
           </FavoritesProvider>
         </LanguageProvider>
       </UserProvider>

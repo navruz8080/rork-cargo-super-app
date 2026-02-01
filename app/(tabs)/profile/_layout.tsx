@@ -59,6 +59,12 @@ export default function ProfileLayout() {
           title: t.registerYourCompany,
         }}
       />
+      <Stack.Screen
+        name="view-history"
+        options={{
+          title: t.viewHistory,
+        }}
+      />
     </Stack>
   );
 }

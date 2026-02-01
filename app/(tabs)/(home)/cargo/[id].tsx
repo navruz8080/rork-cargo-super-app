@@ -14,7 +14,7 @@ import {
   ThumbsUp,
   Edit3,
 } from "lucide-react-native";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
   Text,
@@ -38,6 +38,7 @@ import {
 } from "@/mocks/cargo-data";
 import { Colors } from "@/constants/colors";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useViewHistory } from "@/contexts/ViewHistoryContext";
 
 // Financial Dashboard Exchange Rate
 const EXCHANGE_RATE = 11.25;
@@ -48,6 +49,7 @@ export default function CargoDetailScreen() {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme ?? 'light'];
   const { t } = useLanguage();
+  const { addToHistory } = useViewHistory();
   const [currency, setCurrency] = useState<'USD' | 'TJS'>('USD');
   const { id } = useLocalSearchParams<{ id: string }>();
   const [activeTab, setActiveTab] = useState<Tab>("rates");
@@ -58,6 +60,13 @@ export default function CargoDetailScreen() {
   const cargoWarehouses = warehouses.filter((w) => w.cargoId === id);
   const cargoRates = priceRates.filter((r) => r.cargoId === id);
   const cargoReviews = reviews.filter((r) => r.cargoId === id);
+
+  // Track view in history
+  useEffect(() => {
+    if (cargo) {
+      addToHistory(cargo.id, cargo.name, cargo.logo);
+    }
+  }, [cargo, addToHistory]);
 
   // Generate unique Cargo Marking ID
   const generateMarkingId = () => {
